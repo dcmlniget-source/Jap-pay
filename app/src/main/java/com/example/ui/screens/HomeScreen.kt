@@ -3,7 +3,6 @@ package com.example.ui.screens
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,17 +20,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.Transaction
-import com.example.data.model.User
 import com.example.ui.components.JapAvatar
 import com.example.ui.components.JapCameraPreview
 import com.example.ui.components.QrCodeDisplay
@@ -47,14 +48,15 @@ import java.util.Locale
 @Composable
 fun HomeScreen(viewModel: JapPayViewModel) {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val transactions by viewModel.userTransactions.collectAsStateWithLifecycle()
     val otherUsers by viewModel.otherUsers.collectAsStateWithLifecycle()
     val unreadCount by viewModel.unreadNotificationsCount.collectAsStateWithLifecycle()
+    val adminConfig by viewModel.adminConfig.collectAsStateWithLifecycle()
 
     var showCameraView by remember { mutableStateOf(false) }
     var isTorchOn by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
     var showQrModal by remember { mutableStateOf(false) }
     var showBalanceModal by remember { mutableStateOf(false) }
 
@@ -75,7 +77,7 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                             viewModel.prepareTransfer(decoded, decoded)
                         }
                     } else {
-                        viewModel.showToast("No QR code found in photo")
+                        viewModel.showToast("No QR code found in selected photo")
                     }
                 }
             } catch (_: Exception) {}
@@ -85,8 +87,8 @@ fun HomeScreen(viewModel: JapPayViewModel) {
     if (showQrModal && currentUser != null) {
         ModalBottomSheet(
             onDismissRequest = { showQrModal = false },
-            containerColor = DarkSurface,
-            dragHandle = { BottomSheetDefaults.DragHandle(color = DarkCardBorder) }
+            containerColor = LightSurface,
+            dragHandle = { BottomSheetDefaults.DragHandle(color = LightCardBorder) }
         ) {
             Column(
                 modifier = Modifier
@@ -94,6 +96,8 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                JapAvatar(name = currentUser!!.name, colorIndex = currentUser!!.avatarColorIndex, size = 64)
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = currentUser!!.name,
                     style = MaterialTheme.typography.titleLarge,
@@ -103,16 +107,19 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                 Text(
                     text = currentUser!!.id,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = JapYellowPrimary,
+                    color = BrandPurple,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
-                QrCodeDisplay(content = "jappay://pay?id=${currentUser!!.id}&name=${currentUser!!.name}", size = 220)
+                QrCodeDisplay(
+                    content = "jappay://pay?id=${currentUser!!.id}&name=${currentUser!!.name}",
+                    size = 230
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Scan with any Jap Pay app to receive virtual money",
+                    text = "Scan with any Jap Pay app to send money instantly",
                     color = TextSecondary,
                     fontSize = 12.sp
                 )
@@ -124,8 +131,8 @@ fun HomeScreen(viewModel: JapPayViewModel) {
     if (showBalanceModal && currentUser != null) {
         ModalBottomSheet(
             onDismissRequest = { showBalanceModal = false },
-            containerColor = DarkSurface,
-            dragHandle = { BottomSheetDefaults.DragHandle(color = DarkCardBorder) }
+            containerColor = LightSurface,
+            dragHandle = { BottomSheetDefaults.DragHandle(color = LightCardBorder) }
         ) {
             Column(
                 modifier = Modifier
@@ -141,24 +148,33 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                 Text(
                     text = "₹${"%.2f".format(currentUser!!.walletBalance)}",
                     style = MaterialTheme.typography.displayMedium,
-                    color = JapYellowPrimary,
+                    color = BrandPurple,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkCardElevated),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = LightCardElevated),
+                    border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder))),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.Savings, contentDescription = null, tint = AccentGreen)
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(AccentGreenBg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Filled.Savings, contentDescription = null, tint = AccentGreen)
+                        }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Keeper Savings Jar", color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                            Text("Keeper Savings Jar", color = TextPrimary, fontWeight = FontWeight.Bold)
                             Text("Earn 3% per year", color = TextSecondary, fontSize = 12.sp)
                         }
                         Text(
@@ -178,9 +194,9 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = JapYellowPrimary, contentColor = DarkBackground)
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White)
                 ) {
-                    Text("+ Add Money to Wallet", fontWeight = FontWeight.Bold)
+                    Text("+ Add Money to Wallet", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -190,71 +206,87 @@ fun HomeScreen(viewModel: JapPayViewModel) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 90.dp)
+        contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp)
     ) {
-        // 1. Top Bar
+        // 1. PhonePe Top App Bar (Avatar, Jap ID, Scan & Notifications)
         item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 JapAvatar(
-                    name = currentUser?.name ?: "Devansh",
+                    name = currentUser?.name ?: "User",
                     colorIndex = currentUser?.avatarColorIndex ?: 0,
-                    size = 40,
+                    size = 44,
                     modifier = Modifier.clickable { showQrModal = true }
                 )
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                // Search / Pay Contact Bar
-                Surface(
+                Column(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(24.dp))
-                        .clickable { viewModel.currentScreen.value = Screen.SendMoney }
-                        .border(1.dp, DarkCardBorder, RoundedCornerShape(24.dp)),
-                    color = DarkSurface
+                        .clickable { showQrModal = true }
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Pay any contact or @jap",
-                            color = TextSecondary,
-                            fontSize = 13.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            text = currentUser?.name ?: "User",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(Icons.Default.Verified, contentDescription = null, tint = BrandPurple, modifier = Modifier.size(16.dp))
                     }
+                    Text(
+                        text = currentUser?.id ?: "@jap",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                // QR Icon
+                IconButton(
+                    onClick = { showQrModal = true },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(BrandPurpleTint)
+                ) {
+                    Icon(
+                        Icons.Default.QrCode2,
+                        contentDescription = "My QR",
+                        tint = BrandPurple,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 // Notification Icon with Badge
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
-                        .background(DarkSurface)
+                        .background(BrandPurpleTint)
                         .clickable { viewModel.currentScreen.value = Screen.Notifications },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Outlined.Send,
+                        Icons.Outlined.Notifications,
                         contentDescription = "Notifications",
-                        tint = JapYellowPrimary,
+                        tint = BrandPurple,
                         modifier = Modifier.size(20.dp)
                     )
                     if (unreadCount > 0) {
                         Box(
                             modifier = Modifier
-                                .size(10.dp)
+                                .size(9.dp)
                                 .clip(CircleShape)
                                 .background(AccentRed)
                                 .align(Alignment.TopEnd)
@@ -263,19 +295,142 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
         }
 
-        // 2. Large Interactive "Scan & Pay" Camera Viewfinder Card
+        // 2. Search & Pay Bar
+        item {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { viewModel.currentScreen.value = Screen.SendMoney }
+                    .border(1.dp, LightCardBorder, RoundedCornerShape(16.dp)),
+                color = LightSurface,
+                shadowElevation = 1.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Search by name, phone or @jap ID...",
+                        color = TextSecondary,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(Icons.Default.ContactPhone, contentDescription = null, tint = BrandPurple, modifier = Modifier.size(18.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 3. PhonePe-style "Transfer Money" 4-tile Clean White Card
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(270.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard),
+                    .shadow(3.dp, RoundedCornerShape(20.dp), spotColor = Color(0x15000000)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder)))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Transfer Money",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        TransferActionTile(
+                            icon = Icons.Default.Person,
+                            label = "To Mobile / @jap",
+                            onClick = { viewModel.currentScreen.value = Screen.SendMoney }
+                        )
+                        TransferActionTile(
+                            icon = Icons.Default.AccountBalance,
+                            label = "To Bank / Self",
+                            onClick = { viewModel.currentScreen.value = Screen.SendMoney }
+                        )
+                        TransferActionTile(
+                            icon = Icons.Default.AddCard,
+                            label = "Add Money",
+                            onClick = { viewModel.currentScreen.value = Screen.AddMoney }
+                        )
+                        TransferActionTile(
+                            icon = Icons.Default.AccountBalanceWallet,
+                            label = "Check Balance",
+                            onClick = { showBalanceModal = true }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = LightDivider)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // UPI ID Badge / Copy Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(BrandPurpleTint.copy(alpha = 0.5f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "My Jap UPI ID: ",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = currentUser?.id ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = BrandPurple,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                currentUser?.id?.let {
+                                    clipboardManager.setText(AnnotatedString(it))
+                                    viewModel.showToast("UPI ID copied: $it")
+                                }
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = BrandPurple, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 4. Live Camera / Scan & Pay Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
+                    .shadow(3.dp, RoundedCornerShape(20.dp), spotColor = Color(0x15000000)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
                 border = CardDefaults.outlinedCardBorder().copy(
-                    brush = Brush.linearGradient(listOf(DarkCardBorder, JapYellowPrimary.copy(alpha = 0.6f)))
+                    brush = Brush.linearGradient(listOf(LightCardBorder, BrandPurple.copy(alpha = 0.4f)))
                 )
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
@@ -285,13 +440,12 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                             isFlashOn = isTorchOn
                         )
                     } else {
-                        // Graphic Stylized QR Viewfinder
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
                                     Brush.radialGradient(
-                                        listOf(DarkCardElevated, DarkCard),
+                                        listOf(BrandPurpleTint.copy(alpha = 0.4f), LightSurface),
                                         radius = 400f
                                     )
                                 ),
@@ -300,61 +454,62 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(130.dp)
-                                    .border(2.dp, JapYellowPrimary, RoundedCornerShape(16.dp))
-                                    .padding(12.dp),
+                                    .size(90.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(BrandPurpleTint)
+                                    .border(1.5.dp, BrandPurple, RoundedCornerShape(20.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.QrCodeScanner,
                                     contentDescription = null,
-                                    tint = JapYellowPrimary,
-                                    modifier = Modifier.size(64.dp)
+                                    tint = BrandPurple,
+                                    modifier = Modifier.size(48.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = "Scan & Pay Any QR",
+                                text = "Scan & Pay Any QR Code",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Instant zero-fee Jap transfer",
+                                text = "Real-time scanner with Jap Pay logo verification",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
                         }
                     }
 
-                    // Floating Controls Overlay (Camera toggle, Flash, Gallery)
+                    // Floating Controls Overlay
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(14.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Gallery Button
                         IconButton(
                             onClick = { qrGalleryLauncher.launch("image/*") },
                             modifier = Modifier
-                                .size(42.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.6f))
+                                .background(Color.White.copy(alpha = 0.9f))
+                                .shadow(2.dp, CircleShape)
                         ) {
-                            Icon(Icons.Default.Image, contentDescription = "Scan from Gallery", tint = Color.White)
+                            Icon(Icons.Default.Image, contentDescription = "Gallery", tint = BrandPurple, modifier = Modifier.size(20.dp))
                         }
 
-                        // Toggle Live Camera / Graphic Mode
                         Button(
                             onClick = { showCameraView = !showCameraView },
                             shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (showCameraView) JapYellowPrimary else Color.Black.copy(alpha = 0.6f),
-                                contentColor = if (showCameraView) DarkBackground else Color.White
-                            )
+                                containerColor = if (showCameraView) BrandPurple else BrandPurpleDark,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
                         ) {
                             Icon(
                                 if (showCameraView) Icons.Default.Videocam else Icons.Default.CameraAlt,
@@ -362,21 +517,22 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (showCameraView) "Camera Active" else "Open Camera", fontWeight = FontWeight.Bold)
+                            Text(if (showCameraView) "Camera Active" else "Open Camera", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
 
-                        // Torch Button
                         IconButton(
                             onClick = { isTorchOn = !isTorchOn },
                             modifier = Modifier
-                                .size(42.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.6f))
+                                .background(Color.White.copy(alpha = 0.9f))
+                                .shadow(2.dp, CircleShape)
                         ) {
                             Icon(
                                 if (isTorchOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
                                 contentDescription = "Flash",
-                                tint = if (isTorchOn) JapYellowPrimary else Color.White
+                                tint = if (isTorchOn) BrandPurple else TextSecondary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
@@ -386,77 +542,98 @@ fun HomeScreen(viewModel: JapPayViewModel) {
             Spacer(modifier = Modifier.height(18.dp))
         }
 
-        // 3. Quick Action Buttons Grid (Your QR, Check Balance, History, Add Money, etc.)
+        // 5. Quick Pay Contacts / People
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                QuickActionButton(
-                    icon = Icons.Default.QrCode,
-                    label = "Your QR",
-                    onClick = { showQrModal = true }
+                Text(
+                    text = "Quick Send",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
                 )
-                QuickActionButton(
-                    icon = Icons.Default.AccountBalanceWallet,
-                    label = "Check Balance",
-                    onClick = { showBalanceModal = true }
-                )
-                QuickActionButton(
-                    icon = Icons.Default.History,
-                    label = "History",
-                    onClick = { viewModel.currentScreen.value = Screen.TransactionHistory }
-                )
-                QuickActionButton(
-                    icon = Icons.Default.AddCircle,
-                    label = "Add Money",
-                    onClick = { viewModel.currentScreen.value = Screen.AddMoney }
+                Text(
+                    text = "View All",
+                    color = BrandPurple,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { viewModel.currentScreen.value = Screen.SendMoney }
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Sound Effects & Demo testing cards
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { viewModel.simulateReceiveMoney(amount = 75.0) },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkCardElevated)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                items(otherUsers) { user ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { viewModel.prepareTransfer(user.id, user.name) }
+                            .padding(horizontal = 2.dp)
                     ) {
-                        Text("🎉", fontSize = 20.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("Receive ₹75", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("Plays 'Wow!' sound", color = AccentGreen, fontSize = 11.sp)
-                        }
+                        JapAvatar(name = user.name, colorIndex = user.avatarColorIndex, size = 52)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = user.name.substringBefore(" "),
+                            color = TextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = "₹ pay",
+                            color = BrandPurple,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
+            }
 
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { viewModel.prepareTransfer("anshika@jap", "Anshika Sharma") },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkCardElevated)
-                ) {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        // 6. Recharge & Bill Payments Section (PhonePe style grid)
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = Color(0x12000000)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder)))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Recharge & Pay Bills",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
                     Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("😭", fontSize = 20.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("Send > ₹50", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("Plays Crying sound", color = AccentRed, fontSize = 11.sp)
+                        BillServiceTile(icon = Icons.Default.PhoneAndroid, label = "Mobile\nRecharge", color = Color(0xFF1E88E5)) {
+                            viewModel.showToast("Mobile Recharge service")
+                        }
+                        BillServiceTile(icon = Icons.Default.Tv, label = "DTH\nTV", color = Color(0xFFFB8C00)) {
+                            viewModel.showToast("DTH recharge service")
+                        }
+                        BillServiceTile(icon = Icons.Default.ElectricBolt, label = "Electricity\nBill", color = Color(0xFFE53935)) {
+                            viewModel.showToast("Electricity bill payment")
+                        }
+                        BillServiceTile(icon = Icons.Default.DirectionsCar, label = "FASTag\nRecharge", color = Color(0xFF43A047)) {
+                            viewModel.showToast("FASTag recharge")
                         }
                     }
                 }
@@ -465,63 +642,7 @@ fun HomeScreen(viewModel: JapPayViewModel) {
             Spacer(modifier = Modifier.height(20.dp))
         }
 
-        // 4. Recommended People / Contacts
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Recommended",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "View All",
-                    color = JapYellowPrimary,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { viewModel.currentScreen.value = Screen.SendMoney }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(otherUsers) { user ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { viewModel.prepareTransfer(user.id, user.name) }
-                            .padding(4.dp)
-                    ) {
-                        JapAvatar(name = user.name, colorIndex = user.avatarColorIndex, size = 52)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = user.name.substringBefore(" "),
-                            color = TextPrimary,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1
-                        )
-                        Text(
-                            text = "@jap",
-                            color = TextSecondary,
-                            fontSize = 10.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // 5. Recent Activity / Transactions
+        // 7. Recent Transactions Header
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -535,10 +656,10 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Statement",
-                    color = JapYellowPrimary,
+                    text = "History",
+                    color = BrandPurple,
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable { viewModel.currentScreen.value = Screen.TransactionHistory }
                 )
             }
@@ -548,13 +669,20 @@ fun HomeScreen(viewModel: JapPayViewModel) {
 
         if (transactions.isEmpty()) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = LightSurface),
+                    border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder)))
                 ) {
-                    Text("No transactions yet. Start sending money!", color = TextSecondary, fontSize = 13.sp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(28.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No transactions yet. Start sending money!", color = TextSecondary, fontSize = 13.sp)
+                    }
                 }
             }
         } else {
@@ -567,7 +695,7 @@ fun HomeScreen(viewModel: JapPayViewModel) {
 }
 
 @Composable
-fun QuickActionButton(
+fun TransferActionTile(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit
@@ -575,26 +703,64 @@ fun QuickActionButton(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .width(72.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(4.dp)
+            .padding(vertical = 4.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(54.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(DarkCardElevated)
-                .border(1.dp, DarkCardBorder, RoundedCornerShape(16.dp)),
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(BrandPurpleTint),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = label, tint = JapYellowPrimary, modifier = Modifier.size(24.dp))
+            Icon(icon, contentDescription = label, tint = BrandPurple, modifier = Modifier.size(24.dp))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = label,
+            color = TextPrimary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            lineHeight = 14.sp
+        )
+    }
+}
+
+@Composable
+fun BillServiceTile(
+    icon: ImageVector,
+    label: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(72.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(color.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(22.dp))
         }
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = label,
             color = TextPrimary,
             fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            lineHeight = 14.sp
         )
     }
 }
@@ -606,10 +772,12 @@ fun TransactionItemRow(tx: Transaction, currentUserId: String) {
     val dateStr = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(tx.timestamp))
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
-        border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(DarkCardBorder, DarkCardBorder.copy(alpha = 0.2f))))
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(1.dp, RoundedCornerShape(16.dp), spotColor = Color(0x0F000000)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = LightSurface),
+        border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder)))
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -619,7 +787,7 @@ fun TransactionItemRow(tx: Transaction, currentUserId: String) {
                 modifier = Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .background(if (isCredit) AccentGreenBg else if (isKeeper) DarkCardElevated else AccentRedBg),
+                    .background(if (isCredit) AccentGreenBg else if (isKeeper) BrandPurpleTint else AccentRedBg),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -629,7 +797,7 @@ fun TransactionItemRow(tx: Transaction, currentUserId: String) {
                         else -> Icons.Default.ArrowUpward
                     },
                     contentDescription = null,
-                    tint = if (isCredit) AccentGreen else if (isKeeper) JapYellowPrimary else AccentRed,
+                    tint = if (isCredit) AccentGreen else if (isKeeper) BrandPurple else AccentRed,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -659,12 +827,14 @@ fun TransactionItemRow(tx: Transaction, currentUserId: String) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
-                if (tx.soundTriggered == "CRYING") {
-                    Text("😭 Crying sound", color = AccentRed, fontSize = 10.sp)
-                } else if (tx.soundTriggered == "WOW") {
-                    Text("🎉 Wow!", color = AccentGreen, fontSize = 10.sp)
-                }
+                Text(
+                    text = if (isCredit) "Received" else "Paid",
+                    color = if (isCredit) AccentGreen else TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }
 }
+

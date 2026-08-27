@@ -3,50 +3,49 @@ package com.example.ui.theme
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = JapYellowPrimary,
-    onPrimary = DarkBackground,
-    primaryContainer = JapYellowDark,
-    onPrimaryContainer = DarkBackground,
-    secondary = JapGold,
-    onSecondary = DarkBackground,
-    tertiary = JapYellowLight,
-    onTertiary = DarkBackground,
-    background = DarkBackground,
+private val LightColorScheme = lightColorScheme(
+    primary = BrandPurple,
+    onPrimary = TextOnBrand,
+    primaryContainer = BrandPurpleContainer,
+    onPrimaryContainer = BrandPurpleDark,
+    secondary = BrandYellow,
+    onSecondary = Color.Black,
+    tertiary = BrandBlue,
+    onTertiary = TextOnBrand,
+    background = LightBackground,
     onBackground = TextPrimary,
-    surface = DarkSurface,
+    surface = LightSurface,
     onSurface = TextPrimary,
-    surfaceVariant = DarkCard,
+    surfaceVariant = LightCard,
     onSurfaceVariant = TextSecondary,
-    outline = DarkCardBorder,
+    outline = LightCardBorder,
+    outlineVariant = LightDivider,
     error = AccentRed,
-    onError = TextPrimary
+    onError = Color.White
 )
-
-private val LightColorScheme = DarkColorScheme // Jap Pay features a sleek dark fintech look primarily
 
 @Composable
 fun JapPayTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, // Enforce clean white theme as requested
     content: @Composable () -> Unit
 ) {
-    val colorScheme = DarkColorScheme
+    val colorScheme = LightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = DarkBackground.toArgb()
-            window.navigationBarColor = DarkBackground.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            window.statusBarColor = LightSurface.toArgb()
+            window.navigationBarColor = LightSurface.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = true
         }
     }
 
@@ -56,3 +55,4 @@ fun JapPayTheme(
         content = content
     )
 }
+

@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -68,7 +69,7 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
             .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState())
             .padding(top = 20.dp, bottom = 40.dp)
@@ -93,10 +94,12 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
         if (isSuccess) {
             // Success Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(20.dp), spotColor = Color(0x15000000)),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(AccentGreen, JapYellowPrimary)))
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(AccentGreen, BrandPurple)))
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -114,11 +117,11 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("Payment Successful!", style = MaterialTheme.typography.titleLarge, color = TextPrimary, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text("₹${"%.2f".format(parsedAmount)}", style = MaterialTheme.typography.displayMedium, color = JapYellowPrimary, fontWeight = FontWeight.Black)
+                    Text("₹${"%.2f".format(parsedAmount)}", style = MaterialTheme.typography.displayMedium, color = BrandPurple, fontWeight = FontWeight.Black)
                     Text("Sent to $targetName ($targetId)", color = TextSecondary, fontSize = 14.sp)
                     if (isGreaterThan50) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("😭 Crying sound effect was triggered (> ₹50)!", color = AccentRed, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("😭 Crying sound effect played (> ₹50)!", color = AccentRed, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -126,7 +129,7 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                         onClick = { viewModel.currentScreen.value = Screen.Main },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = JapYellowPrimary, contentColor = DarkBackground)
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White)
                     ) {
                         Text("Done", fontWeight = FontWeight.Bold)
                     }
@@ -141,15 +144,15 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                 value = targetId,
                 onValueChange = { targetId = it },
                 placeholder = { Text("Enter Mobile or @jap ID", color = TextSecondary) },
-                leadingIcon = { Icon(Icons.Default.AlternateEmail, contentDescription = null, tint = JapYellowPrimary) },
+                leadingIcon = { Icon(Icons.Default.AlternateEmail, contentDescription = null, tint = BrandPurple) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp),
                 singleLine = true
@@ -172,8 +175,9 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                                 targetId = user.id
                                 targetName = user.name
                             }
-                            .border(1.dp, if (targetId == user.id) JapYellowPrimary else DarkCardBorder, RoundedCornerShape(20.dp)),
-                        color = DarkSurface
+                            .border(1.dp, if (targetId == user.id) BrandPurple else LightCardBorder, RoundedCornerShape(20.dp)),
+                        color = LightSurface,
+                        shadowElevation = 1.dp
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -181,7 +185,7 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                         ) {
                             JapAvatar(name = user.name, colorIndex = user.avatarColorIndex, size = 24)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(user.name.substringBefore(" "), color = TextPrimary, fontSize = 12.sp)
+                            Text(user.name.substringBefore(" "), color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -197,15 +201,15 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                 value = amountText,
                 onValueChange = { amountText = it },
                 placeholder = { Text("0.00", color = TextSecondary, fontSize = 24.sp) },
-                leadingIcon = { Text("₹", color = JapYellowPrimary, fontSize = 28.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 12.dp)) },
+                leadingIcon = { Text("₹", color = BrandPurple, fontSize = 28.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 12.dp)) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 textStyle = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
                 shape = RoundedCornerShape(14.dp),
@@ -227,7 +231,7 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                         Text("😭", fontSize = 22.sp)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Warning: Amount is > ₹50! Jap Pay will play a crying sound effect on transfer.",
+                            text = "Note: Amount is > ₹50! Jap Pay will play a crying sound effect on transfer.",
                             color = AccentRed,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
@@ -246,12 +250,12 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                 leadingIcon = { Icon(Icons.Default.ChatBubbleOutline, contentDescription = null, tint = TextSecondary) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp),
                 singleLine = true
@@ -335,11 +339,11 @@ fun SendMoneyScreen(viewModel: JapPayViewModel) {
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = JapYellowPrimary, contentColor = DarkBackground),
+                colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White),
                 enabled = !isTransferring
             ) {
                 if (isTransferring) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = DarkBackground)
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
                 } else {
                     Icon(Icons.Filled.Bolt, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
@@ -374,7 +378,7 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
             .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState())
             .padding(top = 20.dp, bottom = 40.dp)
@@ -398,15 +402,17 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
 
         if (isSubmitted) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(20.dp), spotColor = Color(0x15000000)),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkSurface)
+                colors = CardDefaults.cardColors(containerColor = LightSurface)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.HourglassTop, contentDescription = null, tint = JapYellowPrimary, modifier = Modifier.size(56.dp))
+                    Icon(Icons.Default.HourglassTop, contentDescription = null, tint = BrandPurple, modifier = Modifier.size(56.dp))
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("Deposit Submitted!", style = MaterialTheme.typography.titleLarge, color = TextPrimary, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -420,7 +426,7 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
                     Button(
                         onClick = { viewModel.currentScreen.value = Screen.Main },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = JapYellowPrimary, contentColor = DarkBackground),
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Back to Dashboard", fontWeight = FontWeight.Bold)
@@ -430,17 +436,19 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
         } else {
             // Admin QR Display Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = Color(0x15000000)),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard),
-                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(DarkCardBorder, JapYellowPrimary.copy(alpha = 0.5f))))
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, BrandPurpleTint)))
             ) {
                 Column(
                     modifier = Modifier.padding(18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Pay to Jap Pay Official Admin", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Text("Admin UPI ID: ${adminConfig?.adminUpiId ?: "8791738300@jap"}", color = JapYellowPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text("Admin UPI ID: ${adminConfig?.adminUpiId ?: "8791738300@jap"}", color = BrandPurple, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -468,12 +476,12 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
                 label = { Text("Deposit Amount (₹)") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp),
                 singleLine = true
@@ -489,12 +497,12 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
                 placeholder = { Text("e.g. 423891028391") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp),
                 singleLine = true
@@ -512,7 +520,7 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
                         .fillMaxWidth()
                         .height(120.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(DarkSurface),
+                        .background(LightCardElevated),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -527,9 +535,9 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(Icons.Default.Image, contentDescription = null, tint = JapYellowPrimary)
+                    Icon(Icons.Default.Image, contentDescription = null, tint = BrandPurple)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Attach Payment Screenshot", color = TextPrimary)
+                    Text("Attach Payment Screenshot", color = BrandPurple, fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -560,7 +568,7 @@ fun AddMoneyScreen(viewModel: JapPayViewModel) {
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = JapYellowPrimary, contentColor = DarkBackground)
+                colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White)
             ) {
                 Text("Submit for Admin Verification", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
@@ -575,7 +583,7 @@ fun NotificationsScreen(viewModel: JapPayViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
             .padding(horizontal = 20.dp)
             .padding(top = 20.dp, bottom = 40.dp)
     ) {
@@ -612,11 +620,13 @@ fun NotificationsScreen(viewModel: JapPayViewModel) {
             ) {
                 items(notifications) { notif ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(1.dp, RoundedCornerShape(14.dp), spotColor = Color(0x10000000)),
                         shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                        colors = CardDefaults.cardColors(containerColor = LightSurface),
                         border = CardDefaults.outlinedCardBorder().copy(
-                            brush = Brush.horizontalGradient(listOf(DarkCardBorder, if (notif.isRead) Color.Transparent else JapYellowPrimary.copy(alpha = 0.5f)))
+                            brush = Brush.horizontalGradient(listOf(LightCardBorder, if (notif.isRead) LightCardBorder else BrandPurpleTint))
                         )
                     ) {
                         Row(
@@ -631,7 +641,7 @@ fun NotificationsScreen(viewModel: JapPayViewModel) {
                                         when (notif.type) {
                                             "CREDIT" -> AccentGreenBg
                                             "DEBIT" -> AccentRedBg
-                                            else -> DarkCardElevated
+                                            else -> BrandPurpleTint
                                         }
                                     ),
                                 contentAlignment = Alignment.Center
@@ -646,7 +656,7 @@ fun NotificationsScreen(viewModel: JapPayViewModel) {
                                     tint = when (notif.type) {
                                         "CREDIT" -> AccentGreen
                                         "DEBIT" -> AccentRed
-                                        else -> JapYellowPrimary
+                                        else -> BrandPurple
                                     },
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -672,7 +682,7 @@ fun TransactionHistoryScreen(viewModel: JapPayViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
             .padding(horizontal = 20.dp)
             .padding(top = 20.dp, bottom = 40.dp)
     ) {
@@ -714,3 +724,4 @@ fun TransactionHistoryScreen(viewModel: JapPayViewModel) {
         }
     }
 }
+

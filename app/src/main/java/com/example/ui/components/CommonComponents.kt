@@ -22,17 +22,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import coil.compose.AsyncImage
 import com.example.data.model.Country
 import com.example.data.model.CountryData
 import com.example.ui.theme.*
@@ -40,12 +40,12 @@ import com.example.ui.viewmodel.MainTab
 import com.example.util.QrCodeUtils
 
 val avatarColors = listOf(
-    Color(0xFFFFB300),
-    Color(0xFF29B6F6),
-    Color(0xFFAB47BC),
-    Color(0xFF26A69A),
-    Color(0xFFFF7043),
-    Color(0xFFEC407A)
+    Color(0xFF5F259F), // PhonePe Purple
+    Color(0xFF1E88E5), // Blue
+    Color(0xFF00897B), // Teal
+    Color(0xFFFB8C00), // Orange
+    Color(0xFFD81B60), // Pink
+    Color(0xFF43A047)  // Green
 )
 
 @Composable
@@ -67,9 +67,9 @@ fun JapAvatar(
     ) {
         Text(
             text = initial,
-            color = Color.Black,
+            color = Color.White,
             fontWeight = FontWeight.Bold,
-            fontSize = (size * 0.45).sp
+            fontSize = (size * 0.44).sp
         )
     }
 }
@@ -78,7 +78,8 @@ fun JapAvatar(
 fun QrCodeDisplay(
     content: String,
     modifier: Modifier = Modifier,
-    size: Int = 220
+    size: Int = 220,
+    customImageUrl: String? = null
 ) {
     val qrBitmap = remember(content) {
         QrCodeUtils.generateQrBitmap(content, size = 512)
@@ -87,19 +88,27 @@ fun QrCodeDisplay(
     Box(
         modifier = modifier
             .size(size.dp)
+            .shadow(4.dp, RoundedCornerShape(20.dp), spotColor = Color(0x1A000000))
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White)
+            .border(1.dp, LightCardBorder, RoundedCornerShape(20.dp))
             .padding(12.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (qrBitmap != null) {
+        if (!customImageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = customImageUrl,
+                contentDescription = "Custom Payment QR",
+                modifier = Modifier.fillMaxSize()
+            )
+        } else if (qrBitmap != null) {
             Image(
                 bitmap = qrBitmap.asImageBitmap(),
                 contentDescription = "Jap Pay QR Code",
                 modifier = Modifier.fillMaxSize()
             )
         } else {
-            CircularProgressIndicator(color = JapYellowPrimary)
+            CircularProgressIndicator(color = BrandPurple)
         }
     }
 }
@@ -155,8 +164,8 @@ fun CountryCodeModal(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = DarkSurface,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = DarkCardBorder) }
+        containerColor = LightSurface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = LightCardBorder) }
     ) {
         Column(
             modifier = Modifier
@@ -175,11 +184,11 @@ fun CountryCodeModal(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 placeholder = { Text("Search country or code...", color = TextSecondary) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = JapYellowPrimary) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = BrandPurple) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary
                 ),
@@ -217,11 +226,11 @@ fun CountryCodeModal(
                         Text(
                             text = country.dialCode,
                             style = MaterialTheme.typography.titleMedium,
-                            color = JapYellowPrimary,
+                            color = BrandPurple,
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    HorizontalDivider(color = DarkCardBorder.copy(alpha = 0.5f))
+                    HorizontalDivider(color = LightDivider)
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -235,36 +244,36 @@ fun JapBottomNavigationBar(
     onTabSelected: (MainTab) -> Unit
 ) {
     NavigationBar(
-        containerColor = DarkSurface,
-        tonalElevation = 8.dp,
+        containerColor = LightSurface,
+        tonalElevation = 6.dp,
         modifier = Modifier
-            .border(width = 0.5.dp, color = DarkCardBorder, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .border(width = 0.5.dp, color = LightCardBorder, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
     ) {
         NavigationBarItem(
             selected = currentTab == MainTab.BANK,
             onClick = { onTabSelected(MainTab.BANK) },
             icon = { Icon(Icons.Outlined.AccountBalance, contentDescription = "Bank") },
-            label = { Text("Bank", fontSize = 11.sp) },
+            label = { Text("Bank", fontSize = 11.sp, fontWeight = if (currentTab == MainTab.BANK) FontWeight.Bold else FontWeight.Normal) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = JapYellowPrimary,
-                selectedTextColor = JapYellowPrimary,
+                selectedIconColor = BrandPurple,
+                selectedTextColor = BrandPurple,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
-                indicatorColor = Color.Transparent
+                indicatorColor = BrandPurpleTint
             )
         )
         NavigationBarItem(
             selected = currentTab == MainTab.WALLET,
             onClick = { onTabSelected(MainTab.WALLET) },
             icon = { Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = "Wallet") },
-            label = { Text("Wallet", fontSize = 11.sp) },
+            label = { Text("Wallet", fontSize = 11.sp, fontWeight = if (currentTab == MainTab.WALLET) FontWeight.Bold else FontWeight.Normal) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = JapYellowPrimary,
-                selectedTextColor = JapYellowPrimary,
+                selectedIconColor = BrandPurple,
+                selectedTextColor = BrandPurple,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
-                indicatorColor = Color.Transparent
+                indicatorColor = BrandPurpleTint
             )
         )
         NavigationBarItem(
@@ -275,20 +284,20 @@ fun JapBottomNavigationBar(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(if (currentTab == MainTab.HOME) JapYellowPrimary else DarkCard),
+                        .background(if (currentTab == MainTab.HOME) BrandPurple else BrandPurpleTint),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Filled.Bolt,
                         contentDescription = "Home",
-                        tint = if (currentTab == MainTab.HOME) DarkBackground else JapYellowPrimary
+                        tint = if (currentTab == MainTab.HOME) Color.White else BrandPurple
                     )
                 }
             },
-            label = { Text("Home", fontSize = 11.sp) },
+            label = { Text("Home", fontSize = 11.sp, fontWeight = if (currentTab == MainTab.HOME) FontWeight.Bold else FontWeight.Normal) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = JapYellowPrimary,
-                selectedTextColor = JapYellowPrimary,
+                selectedIconColor = BrandPurple,
+                selectedTextColor = BrandPurple,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
                 indicatorColor = Color.Transparent
@@ -298,27 +307,28 @@ fun JapBottomNavigationBar(
             selected = currentTab == MainTab.REWARDS,
             onClick = { onTabSelected(MainTab.REWARDS) },
             icon = { Icon(Icons.Outlined.EmojiEvents, contentDescription = "Rewards") },
-            label = { Text("Rewards", fontSize = 11.sp) },
+            label = { Text("Rewards", fontSize = 11.sp, fontWeight = if (currentTab == MainTab.REWARDS) FontWeight.Bold else FontWeight.Normal) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = JapYellowPrimary,
-                selectedTextColor = JapYellowPrimary,
+                selectedIconColor = BrandPurple,
+                selectedTextColor = BrandPurple,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
-                indicatorColor = Color.Transparent
+                indicatorColor = BrandPurpleTint
             )
         )
         NavigationBarItem(
             selected = currentTab == MainTab.KEEPER,
             onClick = { onTabSelected(MainTab.KEEPER) },
             icon = { Icon(Icons.Outlined.Savings, contentDescription = "Keeper") },
-            label = { Text("Keeper", fontSize = 11.sp) },
+            label = { Text("Keeper", fontSize = 11.sp, fontWeight = if (currentTab == MainTab.KEEPER) FontWeight.Bold else FontWeight.Normal) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = JapYellowPrimary,
-                selectedTextColor = JapYellowPrimary,
+                selectedIconColor = BrandPurple,
+                selectedTextColor = BrandPurple,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
-                indicatorColor = Color.Transparent
+                indicatorColor = BrandPurpleTint
             )
         )
     }
 }
+

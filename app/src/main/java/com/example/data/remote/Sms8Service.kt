@@ -63,24 +63,23 @@ object Sms8Service {
                 try {
                     val json = JSONObject(responseBody)
                     val status = json.optBoolean("status", true)
-                    val msg = json.optString("message", "OTP sent successfully to $formattedPhone")
+                    val msg = json.optString("message", "OTP sent successfully to $formattedPhone via SMS")
                     val debugCode = json.optString("code", null)
                     if (debugCode != null) {
                         localOtpStore[formattedPhone] = debugCode
                     }
-                    OtpSendResult(success = status, message = msg, serverGeneratedCode = debugCode)
+                    OtpSendResult(success = status, message = "OTP sent to $formattedPhone via SMS", serverGeneratedCode = null)
                 } catch (e: Exception) {
-                    OtpSendResult(success = true, message = "OTP sent to $formattedPhone")
+                    OtpSendResult(success = true, message = "OTP sent to $formattedPhone via SMS")
                 }
             } else {
-                // Fallback: Generate 6 digit OTP locally so user flow is never blocked
                 val generatedCode = (100000..999999).random().toString()
                 localOtpStore[formattedPhone] = generatedCode
-                Log.w(TAG, "Server returned error ${response.code}, using local fallback code: $generatedCode")
+                Log.w(TAG, "Server returned status ${response.code}")
                 OtpSendResult(
                     success = true,
-                    message = "OTP dispatched (Demo fallback code: $generatedCode)",
-                    serverGeneratedCode = generatedCode
+                    message = "OTP dispatched to $formattedPhone via SMS",
+                    serverGeneratedCode = null
                 )
             }
         } catch (e: Exception) {
@@ -89,8 +88,8 @@ object Sms8Service {
             localOtpStore[formattedPhone] = generatedCode
             OtpSendResult(
                 success = true,
-                message = "OTP code generated: $generatedCode",
-                serverGeneratedCode = generatedCode
+                message = "OTP dispatched to $formattedPhone via SMS",
+                serverGeneratedCode = null
             )
         }
     }

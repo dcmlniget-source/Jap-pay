@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
         AdminConfig::class,
         AppNotification::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class JapPayDatabase : RoomDatabase() {
@@ -43,6 +43,7 @@ abstract class JapPayDatabase : RoomDatabase() {
                     JapPayDatabase::class.java,
                     "jappay_database"
                 )
+                    .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback())
                     .build()
                 INSTANCE = instance

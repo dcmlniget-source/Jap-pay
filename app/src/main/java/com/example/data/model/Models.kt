@@ -60,7 +60,9 @@ data class AdminConfig(
     val adminPassword: String = "9876543211",
     val adminUpiId: String = "8791738300@jap",
     val adminQrData: String = "upi://pay?pa=8791738300@jap&pn=JapPayAdmin&cu=INR",
-    val depositInstructions: String = "Scan the QR or pay to UPI ID. Enter 12-digit UTR and upload receipt screenshot. Approved in minutes!",
+    val adminQrImageUrl: String = "",
+    val paymentLink: String = "",
+    val depositInstructions: String = "Scan the QR or pay to UPI ID / Payment link. Enter 12-digit UTR and upload receipt screenshot. Approved in minutes!",
     val noticeMessage: String = "Welcome to Jap Pay! Instant peer-to-peer virtual transactions."
 )
 

@@ -12,6 +12,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,11 +30,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.components.JapBottomNavigationBar
 import com.example.ui.screens.*
-import com.example.ui.theme.DarkBackground
-import com.example.ui.theme.DarkCardElevated
-import com.example.ui.theme.JapPayTheme
-import com.example.ui.theme.JapYellowPrimary
-import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.*
 import com.example.ui.viewmodel.JapPayViewModel
 import com.example.ui.viewmodel.MainTab
 import com.example.ui.viewmodel.Screen
@@ -96,7 +94,7 @@ fun JapPayApp(viewModel: JapPayViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
     ) {
         Scaffold(
             bottomBar = {
@@ -107,7 +105,7 @@ fun JapPayApp(viewModel: JapPayViewModel) {
                     )
                 }
             },
-            containerColor = DarkBackground
+            containerColor = LightBackground
         ) { innerPadding ->
             Box(
                 modifier = Modifier
@@ -118,6 +116,7 @@ fun JapPayApp(viewModel: JapPayViewModel) {
                     )
             ) {
                 when (currentScreen) {
+                    Screen.Splash -> SplashScreen(viewModel)
                     Screen.Login -> LoginScreen(viewModel)
                     Screen.SignUp -> SignUpScreen(viewModel)
                     Screen.Admin -> AdminPanelScreen(viewModel)
@@ -151,10 +150,11 @@ fun JapPayApp(viewModel: JapPayViewModel) {
         ) {
             toastMsg?.let { msg ->
                 Surface(
-                    color = DarkCardElevated,
+                    color = LightSurface,
                     shape = RoundedCornerShape(16.dp),
-                    tonalElevation = 8.dp,
+                    tonalElevation = 6.dp,
                     shadowElevation = 8.dp,
+                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(LightCardBorder)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -165,7 +165,7 @@ fun JapPayApp(viewModel: JapPayViewModel) {
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(JapYellowPrimary)
+                                .background(BrandPurple)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
@@ -181,3 +181,4 @@ fun JapPayApp(viewModel: JapPayViewModel) {
         }
     }
 }
+

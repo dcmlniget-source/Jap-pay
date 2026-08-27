@@ -2,25 +2,39 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val JapYellowPrimary = Color(0xFFFFD600)
-val JapYellowLight = Color(0xFFFFEA00)
-val JapYellowDark = Color(0xFFFFAB00)
-val JapGold = Color(0xFFFFC107)
+// PhonePe / GPay Inspired Light & Vibrant Palette
+val BrandPurple = Color(0xFF5F259F)
+val BrandPurpleDark = Color(0xFF4A148C)
+val BrandPurpleLight = Color(0xFF7E57C2)
+val BrandPurpleTint = Color(0xFFF3E8FF)
+val BrandPurpleContainer = Color(0xFFEDE7F6)
 
-val DarkBackground = Color(0xFF0F0F12)
-val DarkSurface = Color(0xFF17171C)
-val DarkCard = Color(0xFF202028)
-val DarkCardElevated = Color(0xFF282834)
-val DarkCardBorder = Color(0xFF333342)
+val BrandBlue = Color(0xFF1A73E8)
+val BrandBlueTint = Color(0xFFE8F0FE)
 
-val TextPrimary = Color(0xFFFFFFFF)
-val TextSecondary = Color(0xFF9E9EA7)
-val TextTertiary = Color(0xFF6B6B78)
+val BrandYellow = Color(0xFFFFB300)
+val BrandYellowTint = Color(0xFFFFF8E1)
 
-val AccentGreen = Color(0xFF00E676)
-val AccentGreenBg = Color(0xFF0D2818)
-val AccentRed = Color(0xFFFF5252)
-val AccentRedBg = Color(0xFF331414)
+// Crisp Light Theme Surfaces
+val LightBackground = Color(0xFFF6F7F9)
+val LightSurface = Color(0xFFFFFFFF)
+val LightCard = Color(0xFFFFFFFF)
+val LightCardElevated = Color(0xFFFFFFFF)
+val LightCardBorder = Color(0xFFE5E7EB)
+val LightDivider = Color(0xFFF0F2F5)
+
+// Typography Colors
+val TextPrimary = Color(0xFF1E293B)
+val TextSecondary = Color(0xFF64748B)
+val TextTertiary = Color(0xFF94A3B8)
+val TextOnBrand = Color(0xFFFFFFFF)
+
+// Status & Action Accents
+val AccentGreen = Color(0xFF00A86B)
+val AccentGreenBg = Color(0xFFE8F8F0)
+val AccentRed = Color(0xFFEF4444)
+val AccentRedBg = Color(0xFFFEE2E2)
 val AccentPurple = Color(0xFF7C4DFF)
-val AccentBlue = Color(0xFF2979FF)
-val AccentOrange = Color(0xFFFF9100)
+val AccentBlue = Color(0xFF2563EB)
+val AccentOrange = Color(0xFFF97316)
+

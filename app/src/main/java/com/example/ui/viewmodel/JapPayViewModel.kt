@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class Screen {
+    object Splash : Screen()
     object Login : Screen()
     object SignUp : Screen()
     object Main : Screen()
@@ -52,12 +53,12 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
         NotificationHelper.initChannels(application)
     }
 
-    // Navigation State
-    val currentScreen = MutableStateFlow<Screen>(Screen.Login)
+    // Navigation State - Starts with animated Splash screen
+    val currentScreen = MutableStateFlow<Screen>(Screen.Splash)
     val currentTab = MutableStateFlow(MainTab.HOME)
 
     // Current User / Session
-    val currentUserId = MutableStateFlow("8791738300@jap") // Default logged in to Devansh for immediate interactive preview
+    val currentUserId = MutableStateFlow("8791738300@jap")
     val currentUser: StateFlow<User?> = currentUserId.flatMapLatest { id ->
         if (id.isEmpty()) flowOf(null) else repository.getUserFlow(id)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -141,7 +142,7 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
         val cleanPhone = phone.trim().replace(" ", "").replace("-", "")
         val fullPhone = "${country.dialCode}$cleanPhone"
 
-        // 1. Check Admin Credentials: Phone +91 8791738300 or 8791738300 and password 9876543211
+        // Check Admin Credentials: Phone +91 8791738300 and password 9876543211
         val isAdminPhone = (cleanPhone == "8791738300" || fullPhone == "+918791738300" || fullPhone == "+91 8791738300")
         if (isAdminPhone && pass == "9876543211") {
             currentScreen.value = Screen.Admin
@@ -163,7 +164,6 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
                 return@launch
             }
 
-            // Set user logged in
             currentUserId.value = user.id
             currentScreen.value = Screen.Main
             onSuccess(false)
@@ -180,10 +180,8 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
             val result = Sms8Service.sendOtp(fullPhone)
             isSendingOtp.value = false
             if (result.success) {
-                otpSentMessage.value = "OTP sent to $fullPhone via SMS8"
-                if (result.serverGeneratedCode != null) {
-                    showToast("SMS8 Code: ${result.serverGeneratedCode}")
-                }
+                otpSentMessage.value = "OTP sent to your mobile number via SMS"
+                showToast("OTP sent to $fullPhone via SMS")
             } else {
                 otpError.value = result.message
             }
@@ -204,7 +202,7 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
                 showToast("Phone number verified successfully! ✓")
                 onVerified()
             } else {
-                otpError.value = result.reason.ifEmpty { "Invalid OTP. Please check again." }
+                otpError.value = result.reason.ifEmpty { "Invalid OTP. Please enter the code sent to your phone." }
             }
         }
     }
@@ -255,7 +253,7 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
                 aadhaarVerified = aadhaarAiResult.value?.isAuthentic ?: true,
                 aadhaarNumberMasked = aadhaarAiResult.value?.maskedNumber ?: "XXXX-XXXX-${cleanPhone.takeLast(4)}",
                 aadhaarVerificationNotes = aadhaarAiResult.value?.details ?: "Aadhaar Verified",
-                walletBalance = 100.0, // Welcome signup bonus
+                walletBalance = 100.0,
                 avatarColorIndex = (0..5).random()
             )
 
@@ -303,14 +301,8 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
             isTransferring.value = false
 
             result.onSuccess { tx ->
-                // Play specific requested sound effects
-                if (amount > 50.0) {
-                    SoundPlayer.playCryingSound(getApplication<Application>())
-                    showToast("Transfer > ₹50 completed! 😭 (Crying sound played)")
-                } else {
-                    SoundPlayer.playCoinChime(getApplication<Application>())
-                    showToast("Transfer of ₹${"%.2f".format(amount)} completed! ⚡")
-                }
+                // Play crying meme sound on money transfer
+                SoundPlayer.playCryingSound(getApplication<Application>())
 
                 // Trigger real notification
                 NotificationHelper.showNotification(
@@ -323,42 +315,6 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
             }.onFailure { err ->
                 onComplete(false, err.message ?: "Transfer failed")
             }
-        }
-    }
-
-    // Receive simulated money (to test receiving sound and notifications)
-    fun simulateReceiveMoney(senderName: String = "Varun Rathore", amount: Double = 75.0) {
-        val user = currentUser.value ?: return
-        viewModelScope.launch {
-            repository.userDao.addWalletBalance(user.id, amount)
-            repository.transactionDao.insertTransaction(
-                Transaction(
-                    senderId = "varun@jap",
-                    senderName = senderName,
-                    receiverId = user.id,
-                    receiverName = user.name,
-                    amount = amount,
-                    message = "Split payment 🍕",
-                    status = "SUCCESS",
-                    type = "TRANSFER",
-                    soundTriggered = "WOW"
-                )
-            )
-
-            repository.broadcastNotification(
-                title = "Money Received! 🎉",
-                message = "$senderName sent you ₹${"%.2f".format(amount)}",
-                targetUserId = user.id
-            )
-
-            // Play Wow sound & notify
-            SoundPlayer.playWowSound(getApplication<Application>())
-            NotificationHelper.showNotification(
-                context = getApplication<Application>(),
-                title = "Money Received! 🎉 (Jap Pay)",
-                message = "₹${"%.2f".format(amount)} received from $senderName"
-            )
-            showToast("Received ₹${"%.2f".format(amount)}! Wow! 🥳")
         }
     }
 
@@ -417,7 +373,7 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
             )
             repository.submitDepositRequest(req)
             SoundPlayer.playCoinChime(getApplication<Application>())
-            showToast("Deposit request of ₹${"%.2f".format(amount)} submitted for Admin verification!")
+            showToast("Deposit request of ₹${"%.2f".format(amount)} submitted for verification!")
             onSuccess()
         }
     }
@@ -456,12 +412,20 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun adminUpdateConfig(adminUpiId: String, depositInstructions: String, notice: String) {
+    fun adminUpdateConfig(
+        adminUpiId: String,
+        adminQrImageUrl: String,
+        paymentLink: String,
+        depositInstructions: String,
+        notice: String
+    ) {
         val current = adminConfig.value ?: AdminConfig()
         viewModelScope.launch {
             repository.saveAdminConfig(
                 current.copy(
                     adminUpiId = adminUpiId,
+                    adminQrImageUrl = adminQrImageUrl,
+                    paymentLink = paymentLink,
                     depositInstructions = depositInstructions,
                     noticeMessage = notice
                 )
@@ -470,3 +434,4 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 }
+

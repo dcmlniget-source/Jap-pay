@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -47,8 +48,8 @@ fun LoginScreen(viewModel: JapPayViewModel) {
     var selectedCountry by remember { mutableStateOf(CountryData.countries.first { it.dialCode == "+91" }) }
     var showCountryPicker by remember { mutableStateOf(false) }
 
-    var phone by remember { mutableStateOf("8791738300") }
-    var password by remember { mutableStateOf("password123") }
+    var phone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var otpCode by remember { mutableStateOf("") }
     var showOtpField by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -69,7 +70,7 @@ fun LoginScreen(viewModel: JapPayViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
             .padding(horizontal = 24.dp)
     ) {
         Column(
@@ -85,16 +86,17 @@ fun LoginScreen(viewModel: JapPayViewModel) {
             Box(
                 modifier = Modifier
                     .size(76.dp)
-                    .clip(RoundedCornerShape(22.dp))
+                    .shadow(8.dp, CircleShape, spotColor = BrandPurple)
+                    .clip(CircleShape)
                     .background(
-                        Brush.linearGradient(listOf(JapYellowLight, JapYellowDark))
+                        Brush.linearGradient(listOf(BrandPurple, BrandPurpleDark))
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Filled.Bolt,
                     contentDescription = "Jap Pay",
-                    tint = DarkBackground,
+                    tint = Color.White,
                     modifier = Modifier.size(46.dp)
                 )
             }
@@ -102,9 +104,9 @@ fun LoginScreen(viewModel: JapPayViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "jap pay",
-                style = MaterialTheme.typography.displayMedium,
-                color = JapYellowPrimary,
+                text = "Jap Pay",
+                style = MaterialTheme.typography.displaySmall,
+                color = BrandPurple,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp
             )
@@ -116,43 +118,7 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Admin Shortcut Banner
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        phone = "8791738300"
-                        password = "9876543211"
-                        viewModel.loginWithCredentials(
-                            selectedCountry,
-                            phone,
-                            password,
-                            null,
-                            onSuccess = {},
-                            onError = { errorMessage = it }
-                        )
-                    },
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCardElevated),
-                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(JapYellowPrimary, AccentOrange)))
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Filled.AdminPanelSettings, contentDescription = null, tint = JapYellowPrimary)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Admin Login Quick Access", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text("+91 8791738300 | 9876543211", color = TextSecondary, fontSize = 12.sp)
-                    }
-                    Icon(Icons.Default.ArrowForward, contentDescription = null, tint = JapYellowPrimary)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Country & Phone Input
             Row(
@@ -164,8 +130,9 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
                         .clickable { showCountryPicker = true }
-                        .border(1.dp, DarkCardBorder, RoundedCornerShape(14.dp)),
-                    color = DarkSurface
+                        .border(1.dp, LightCardBorder, RoundedCornerShape(14.dp)),
+                    color = LightSurface,
+                    shadowElevation = 1.dp
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 15.dp),
@@ -187,12 +154,12 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                     placeholder = { Text("Mobile Number", color = TextSecondary) },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = JapYellowPrimary,
-                        unfocusedBorderColor = DarkCardBorder,
+                        focusedBorderColor = BrandPurple,
+                        unfocusedBorderColor = LightCardBorder,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkSurface,
-                        unfocusedContainerColor = DarkSurface
+                        focusedContainerColor = LightSurface,
+                        unfocusedContainerColor = LightSurface
                     ),
                     shape = RoundedCornerShape(14.dp),
                     singleLine = true
@@ -218,12 +185,12 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp),
                 singleLine = true
@@ -234,25 +201,25 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                 OutlinedTextField(
                     value = otpCode,
                     onValueChange = { if (it.length <= 6) otpCode = it },
-                    placeholder = { Text("Enter 6-digit SMS8 OTP", color = TextSecondary) },
-                    leadingIcon = { Icon(Icons.Default.Sms, contentDescription = null, tint = JapYellowPrimary) },
+                    placeholder = { Text("Enter 6-digit SMS OTP", color = TextSecondary) },
+                    leadingIcon = { Icon(Icons.Default.Sms, contentDescription = null, tint = BrandPurple) },
                     trailingIcon = {
                         if (isSendingOtp) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = JapYellowPrimary)
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = BrandPurple)
                         } else {
                             TextButton(onClick = { viewModel.requestOtp(selectedCountry, phone) }) {
-                                Text("Resend", color = JapYellowPrimary, fontSize = 12.sp)
+                                Text("Resend", color = BrandPurple, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = JapYellowPrimary,
-                        unfocusedBorderColor = DarkCardBorder,
+                        focusedBorderColor = BrandPurple,
+                        unfocusedBorderColor = LightCardBorder,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkSurface,
-                        unfocusedContainerColor = DarkSurface
+                        focusedContainerColor = LightSurface,
+                        unfocusedContainerColor = LightSurface
                     ),
                     shape = RoundedCornerShape(14.dp),
                     singleLine = true
@@ -260,8 +227,21 @@ fun LoginScreen(viewModel: JapPayViewModel) {
             }
 
             if (otpSentMessage != null) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(otpSentMessage!!, color = AccentGreen, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    color = AccentGreenBg,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        otpSentMessage!!,
+                        color = AccentGreen,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(8.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             if (errorMessage != null) {
@@ -289,8 +269,8 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = JapYellowPrimary,
-                    contentColor = DarkBackground
+                    containerColor = BrandPurple,
+                    contentColor = Color.White
                 )
             ) {
                 Text("Login to Jap Pay", fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -308,15 +288,15 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                border = ButtonDefaults.outlinedButtonBorder().copy(brush = Brush.horizontalGradient(listOf(DarkCardBorder, JapYellowPrimary)))
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BrandPurple),
+                border = ButtonDefaults.outlinedButtonBorder().copy(brush = Brush.horizontalGradient(listOf(BrandPurple, BrandPurpleLight)))
             ) {
-                Icon(Icons.Default.Pin, contentDescription = null, tint = JapYellowPrimary)
+                Icon(Icons.Default.Pin, contentDescription = null, tint = BrandPurple)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Login via SMS8 OTP", fontSize = 14.sp)
+                Text("Login via SMS OTP", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Fingerprint Quick Auth Button
             if (context is FragmentActivity && BiometricHelper.canAuthenticate(context)) {
@@ -334,15 +314,16 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                     modifier = Modifier
                         .size(54.dp)
                         .clip(CircleShape)
-                        .background(DarkCard)
+                        .background(BrandPurpleTint)
                 ) {
                     Icon(
                         Icons.Default.Fingerprint,
                         contentDescription = "Fingerprint Login",
-                        tint = JapYellowPrimary,
+                        tint = BrandPurple,
                         modifier = Modifier.size(32.dp)
                     )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
                 Text("Tap for Fingerprint Login", color = TextSecondary, fontSize = 12.sp)
             }
 
@@ -354,7 +335,7 @@ fun LoginScreen(viewModel: JapPayViewModel) {
                 modifier = Modifier.clickable { viewModel.currentScreen.value = Screen.SignUp }
             ) {
                 Text("Don't have an account? ", color = TextSecondary, fontSize = 14.sp)
-                Text("Sign Up with AI KYC", color = JapYellowPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("Sign Up with AI KYC", color = BrandPurple, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -407,7 +388,7 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(LightBackground)
             .padding(horizontal = 24.dp)
     ) {
         Column(
@@ -441,15 +422,15 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                 onValueChange = { fullName = it },
                 label = { Text("Full Name") },
                 placeholder = { Text("e.g. Devansh") },
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = JapYellowPrimary) },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = BrandPurple) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp)
             )
@@ -465,8 +446,9 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
                         .clickable { showCountryPicker = true }
-                        .border(1.dp, DarkCardBorder, RoundedCornerShape(14.dp)),
-                    color = DarkSurface
+                        .border(1.dp, LightCardBorder, RoundedCornerShape(14.dp)),
+                    color = LightSurface,
+                    shadowElevation = 1.dp
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 15.dp),
@@ -488,12 +470,12 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                     placeholder = { Text("10 digits") },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = JapYellowPrimary,
-                        unfocusedBorderColor = DarkCardBorder,
+                        focusedBorderColor = BrandPurple,
+                        unfocusedBorderColor = LightCardBorder,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkSurface,
-                        unfocusedContainerColor = DarkSurface
+                        focusedContainerColor = LightSurface,
+                        unfocusedContainerColor = LightSurface
                     ),
                     shape = RoundedCornerShape(14.dp)
                 )
@@ -506,15 +488,15 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                 onValueChange = { password = it },
                 label = { Text("Create Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = JapYellowPrimary) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = BrandPurple) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp)
             )
@@ -526,15 +508,15 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                 onValueChange = { address = it },
                 label = { Text("Address / City") },
                 placeholder = { Text("e.g. Sector 62, Noida") },
-                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = JapYellowPrimary) },
+                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BrandPurple) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = JapYellowPrimary,
-                    unfocusedBorderColor = DarkCardBorder,
+                    focusedBorderColor = BrandPurple,
+                    unfocusedBorderColor = LightCardBorder,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary,
-                    focusedContainerColor = DarkSurface,
-                    unfocusedContainerColor = DarkSurface
+                    focusedContainerColor = LightSurface,
+                    unfocusedContainerColor = LightSurface
                 ),
                 shape = RoundedCornerShape(14.dp)
             )
@@ -543,14 +525,16 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
 
             // AI Aadhaar Verification Section
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Color(0x12000000)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard),
-                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(DarkCardBorder, JapYellowPrimary.copy(alpha = 0.5f))))
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, BrandPurpleTint)))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.VerifiedUser, contentDescription = null, tint = JapYellowPrimary)
+                        Icon(Icons.Filled.VerifiedUser, contentDescription = null, tint = BrandPurple)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             "AI Aadhaar Verification",
@@ -575,7 +559,7 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                                 .fillMaxWidth()
                                 .height(140.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(DarkSurface),
+                                .background(LightCardElevated),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
@@ -593,9 +577,9 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.Center
                                     ) {
-                                        CircularProgressIndicator(color = JapYellowPrimary)
+                                        CircularProgressIndicator(color = BrandPurple)
                                         Spacer(modifier = Modifier.height(8.dp))
-                                        Text("AI analyzing document...", color = TextPrimary, fontSize = 12.sp)
+                                        Text("AI analyzing document...", color = Color.White, fontSize = 12.sp)
                                     }
                                 }
                             }
@@ -638,12 +622,12 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                         Button(
                             onClick = { imagePickerLauncher.launch("image/*") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkCardElevated),
+                            colors = ButtonDefaults.buttonColors(containerColor = BrandPurpleTint),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.AddPhotoAlternate, contentDescription = null, tint = JapYellowPrimary)
+                            Icon(Icons.Default.AddPhotoAlternate, contentDescription = null, tint = BrandPurple)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Select Aadhaar Photo / Scan", color = TextPrimary)
+                            Text("Select Aadhaar Photo / Scan", color = BrandPurple, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -659,15 +643,15 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                 OutlinedTextField(
                     value = otpCode,
                     onValueChange = { if (it.length <= 6) otpCode = it },
-                    placeholder = { Text("SMS8 OTP", color = TextSecondary) },
+                    placeholder = { Text("SMS OTP", color = TextSecondary) },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = JapYellowPrimary,
-                        unfocusedBorderColor = DarkCardBorder,
+                        focusedBorderColor = BrandPurple,
+                        unfocusedBorderColor = LightCardBorder,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkSurface,
-                        unfocusedContainerColor = DarkSurface
+                        focusedContainerColor = LightSurface,
+                        unfocusedContainerColor = LightSurface
                     ),
                     shape = RoundedCornerShape(14.dp),
                     singleLine = true
@@ -684,12 +668,12 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                         }
                     },
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkCardElevated)
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandPurpleTint)
                 ) {
                     if (isSendingOtp) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = JapYellowPrimary)
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = BrandPurple)
                     } else {
-                        Text("Get OTP", color = JapYellowPrimary)
+                        Text("Get OTP", color = BrandPurple, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -720,8 +704,8 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
                     .height(52.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = JapYellowPrimary,
-                    contentColor = DarkBackground
+                    containerColor = BrandPurple,
+                    contentColor = Color.White
                 )
             ) {
                 Text("Complete Registration (Get ₹100 Bonus)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -731,3 +715,4 @@ fun SignUpScreen(viewModel: JapPayViewModel) {
         }
     }
 }
+

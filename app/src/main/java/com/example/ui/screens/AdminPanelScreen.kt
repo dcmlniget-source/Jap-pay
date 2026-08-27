@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,12 +18,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.example.ui.components.JapAvatar
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.JapPayViewModel
@@ -52,8 +55,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = DarkSurface,
-                modifier = Modifier.width(280.dp)
+                drawerContainerColor = LightSurface,
+                modifier = Modifier.width(290.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -64,15 +67,23 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 12.dp)
                     ) {
-                        Icon(Icons.Filled.AdminPanelSettings, contentDescription = null, tint = JapYellowPrimary, modifier = Modifier.size(32.dp))
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(BrandPurpleTint),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Filled.AdminPanelSettings, contentDescription = null, tint = BrandPurple, modifier = Modifier.size(26.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text("Jap Pay Admin", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("+91 8791738300", color = JapYellowPrimary, fontSize = 12.sp)
+                            Text("Master Control Panel", color = BrandPurple, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                         }
                     }
 
-                    HorizontalDivider(color = DarkCardBorder, modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(color = LightDivider, modifier = Modifier.padding(vertical = 8.dp))
 
                     NavigationDrawerItem(
                         icon = { Icon(Icons.Default.HourglassTop, contentDescription = null) },
@@ -83,25 +94,25 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             scope.launch { drawerState.close() }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
-                            selectedContainerColor = DarkCardElevated,
-                            selectedIconColor = JapYellowPrimary,
-                            selectedTextColor = JapYellowPrimary,
+                            selectedContainerColor = BrandPurpleTint,
+                            selectedIconColor = BrandPurple,
+                            selectedTextColor = BrandPurple,
                             unselectedTextColor = TextSecondary
                         )
                     )
 
                     NavigationDrawerItem(
                         icon = { Icon(Icons.Default.QrCode, contentDescription = null) },
-                        label = { Text("Manage Payment QR") },
+                        label = { Text("Payment QR & Links") },
                         selected = selectedAdminTab == AdminTab.QR_SETTINGS,
                         onClick = {
                             selectedAdminTab = AdminTab.QR_SETTINGS
                             scope.launch { drawerState.close() }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
-                            selectedContainerColor = DarkCardElevated,
-                            selectedIconColor = JapYellowPrimary,
-                            selectedTextColor = JapYellowPrimary,
+                            selectedContainerColor = BrandPurpleTint,
+                            selectedIconColor = BrandPurple,
+                            selectedTextColor = BrandPurple,
                             unselectedTextColor = TextSecondary
                         )
                     )
@@ -115,9 +126,9 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             scope.launch { drawerState.close() }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
-                            selectedContainerColor = DarkCardElevated,
-                            selectedIconColor = JapYellowPrimary,
-                            selectedTextColor = JapYellowPrimary,
+                            selectedContainerColor = BrandPurpleTint,
+                            selectedIconColor = BrandPurple,
+                            selectedTextColor = BrandPurple,
                             unselectedTextColor = TextSecondary
                         )
                     )
@@ -131,9 +142,9 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             scope.launch { drawerState.close() }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
-                            selectedContainerColor = DarkCardElevated,
-                            selectedIconColor = JapYellowPrimary,
-                            selectedTextColor = JapYellowPrimary,
+                            selectedContainerColor = BrandPurpleTint,
+                            selectedIconColor = BrandPurple,
+                            selectedTextColor = BrandPurple,
                             unselectedTextColor = TextSecondary
                         )
                     )
@@ -147,9 +158,9 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             scope.launch { drawerState.close() }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
-                            selectedContainerColor = DarkCardElevated,
-                            selectedIconColor = JapYellowPrimary,
-                            selectedTextColor = JapYellowPrimary,
+                            selectedContainerColor = BrandPurpleTint,
+                            selectedIconColor = BrandPurple,
+                            selectedTextColor = BrandPurple,
                             unselectedTextColor = TextSecondary
                         )
                     )
@@ -162,12 +173,12 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             viewModel.currentScreen.value = Screen.Main
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkCardElevated),
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandPurpleTint),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(Icons.Default.Logout, contentDescription = null, tint = TextSecondary)
+                        Icon(Icons.Default.Logout, contentDescription = null, tint = BrandPurple)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Switch to User App", color = TextPrimary)
+                        Text("Switch to User App", color = BrandPurple, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -180,7 +191,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                         Text(
                             when (selectedAdminTab) {
                                 AdminTab.DEPOSITS -> "Deposit Requests Review"
-                                AdminTab.QR_SETTINGS -> "Admin Payment QR & UPI"
+                                AdminTab.QR_SETTINGS -> "Payment QR & Links Setup"
                                 AdminTab.BROADCAST -> "Broadcast Notification"
                                 AdminTab.USERS -> "Registered Users"
                                 AdminTab.AUDIT -> "Audit Logs"
@@ -192,18 +203,18 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = JapYellowPrimary)
+                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = BrandPurple)
                         }
                     },
                     actions = {
                         TextButton(onClick = { viewModel.currentScreen.value = Screen.Main }) {
-                            Text("User Mode", color = JapYellowPrimary, fontWeight = FontWeight.Bold)
+                            Text("User App", color = BrandPurple, fontWeight = FontWeight.Bold)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkSurface)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = LightSurface)
                 )
             },
-            containerColor = DarkBackground
+            containerColor = LightBackground
         ) { paddingValues ->
             Box(
                 modifier = Modifier
@@ -222,17 +233,19 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 items(pending) { req ->
                                     Card(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Color(0x12000000)),
                                         shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                                        colors = CardDefaults.cardColors(containerColor = LightSurface),
                                         border = CardDefaults.outlinedCardBorder().copy(
                                             brush = Brush.horizontalGradient(
                                                 listOf(
-                                                    DarkCardBorder,
+                                                    LightCardBorder,
                                                     when (req.status) {
                                                         "APPROVED" -> AccentGreen
                                                         "REJECTED" -> AccentRed
-                                                        else -> JapYellowPrimary
+                                                        else -> BrandPurple
                                                     }
                                                 )
                                             )
@@ -246,7 +259,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                             ) {
                                                 Column {
                                                     Text(req.userName, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                                    Text(req.userId, color = JapYellowPrimary, fontSize = 12.sp)
+                                                    Text(req.userId, color = BrandPurple, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                                                 }
                                                 Text(
                                                     "₹${"%.2f".format(req.amount)}",
@@ -263,7 +276,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                                 color = when (req.status) {
                                                     "APPROVED" -> AccentGreen
                                                     "REJECTED" -> AccentRed
-                                                    else -> JapYellowPrimary
+                                                    else -> BrandPurple
                                                 },
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 12.sp
@@ -289,7 +302,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                                     Button(
                                                         onClick = { viewModel.adminApproveDeposit(req.id) },
                                                         modifier = Modifier.weight(1f),
-                                                        colors = ButtonDefaults.buttonColors(containerColor = AccentGreen, contentColor = Color.Black),
+                                                        colors = ButtonDefaults.buttonColors(containerColor = AccentGreen, contentColor = Color.White),
                                                         shape = RoundedCornerShape(10.dp)
                                                     ) {
                                                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -307,6 +320,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
 
                     AdminTab.QR_SETTINGS -> {
                         var upiId by remember { mutableStateOf(adminConfig?.adminUpiId ?: "8791738300@jap") }
+                        var qrImageUrl by remember { mutableStateOf(adminConfig?.adminQrImageUrl ?: "") }
+                        var paymentLink by remember { mutableStateOf(adminConfig?.paymentLink ?: "") }
                         var instructions by remember { mutableStateOf(adminConfig?.depositInstructions ?: "") }
                         var notice by remember { mutableStateOf(adminConfig?.noticeMessage ?: "") }
 
@@ -315,17 +330,67 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
                         ) {
-                            Text("Configure Deposit Gateway", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("Configure Payment QR & UPI Gateway", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Spacer(modifier = Modifier.height(14.dp))
 
                             OutlinedTextField(
                                 value = upiId,
                                 onValueChange = { upiId = it },
                                 label = { Text("Admin Receiving UPI ID") },
+                                placeholder = { Text("e.g. 8791738300@jap or devansh@upi") },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = JapYellowPrimary,
-                                    unfocusedBorderColor = DarkCardBorder,
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            OutlinedTextField(
+                                value = qrImageUrl,
+                                onValueChange = { qrImageUrl = it },
+                                label = { Text("Custom Payment QR Image URL") },
+                                placeholder = { Text("https://example.com/payment_qr.png") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
+                                )
+                            )
+
+                            if (qrImageUrl.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(140.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .border(1.dp, LightCardBorder, RoundedCornerShape(12.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    AsyncImage(
+                                        model = qrImageUrl,
+                                        contentDescription = "Preview QR Image",
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            OutlinedTextField(
+                                value = paymentLink,
+                                onValueChange = { paymentLink = it },
+                                label = { Text("Payment Link (Optional)") },
+                                placeholder = { Text("https://pay.example.com/instant") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
                                     focusedTextColor = TextPrimary,
                                     unfocusedTextColor = TextPrimary
                                 )
@@ -340,8 +405,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 modifier = Modifier.fillMaxWidth(),
                                 minLines = 3,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = JapYellowPrimary,
-                                    unfocusedBorderColor = DarkCardBorder,
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
                                     focusedTextColor = TextPrimary,
                                     unfocusedTextColor = TextPrimary
                                 )
@@ -355,8 +420,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 label = { Text("System Announcement Banner") },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = JapYellowPrimary,
-                                    unfocusedBorderColor = DarkCardBorder,
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
                                     focusedTextColor = TextPrimary,
                                     unfocusedTextColor = TextPrimary
                                 )
@@ -365,13 +430,16 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             Spacer(modifier = Modifier.height(20.dp))
 
                             Button(
-                                onClick = { viewModel.adminUpdateConfig(upiId, instructions, notice) },
+                                onClick = {
+                                    viewModel.adminUpdateConfig(upiId, qrImageUrl, paymentLink, instructions, notice)
+                                },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = JapYellowPrimary, contentColor = DarkBackground),
+                                colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Save Settings", fontWeight = FontWeight.Bold)
+                                Text("Save Settings", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                             }
+                            Spacer(modifier = Modifier.height(30.dp))
                         }
                     }
 
@@ -393,8 +461,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 placeholder = { Text("Notification Title (e.g. Cashback Weekend ⚡)") },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = JapYellowPrimary,
-                                    unfocusedBorderColor = DarkCardBorder,
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
                                     focusedTextColor = TextPrimary,
                                     unfocusedTextColor = TextPrimary
                                 )
@@ -409,8 +477,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 modifier = Modifier.fillMaxWidth(),
                                 minLines = 4,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = JapYellowPrimary,
-                                    unfocusedBorderColor = DarkCardBorder,
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
                                     focusedTextColor = TextPrimary,
                                     unfocusedTextColor = TextPrimary
                                 )
@@ -427,7 +495,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = JapYellowPrimary, contentColor = DarkBackground),
+                                colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -441,9 +509,12 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             items(allUsers) { user ->
                                 Card(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .shadow(1.dp, RoundedCornerShape(14.dp), spotColor = Color(0x10000000)),
                                     shape = RoundedCornerShape(14.dp),
-                                    colors = CardDefaults.cardColors(containerColor = DarkSurface)
+                                    colors = CardDefaults.cardColors(containerColor = LightSurface),
+                                    border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder)))
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(14.dp),
@@ -453,7 +524,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(user.name, color = TextPrimary, fontWeight = FontWeight.Bold)
-                                            Text(user.id, color = JapYellowPrimary, fontSize = 12.sp)
+                                            Text(user.id, color = BrandPurple, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                                             Text("Aadhaar: ${user.aadhaarNumberMasked} (${if (user.aadhaarVerified) "Verified ✓" else "Pending"})", color = TextSecondary, fontSize = 11.sp)
                                         }
                                         Column(horizontalAlignment = Alignment.End) {
@@ -473,7 +544,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = DarkSurface)
+                                    colors = CardDefaults.cardColors(containerColor = LightSurface),
+                                    border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder)))
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(12.dp),
@@ -483,7 +555,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                             Text("${tx.senderName} ➔ ${tx.receiverName}", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                                             Text("${tx.senderId} to ${tx.receiverId} • $dateStr", color = TextSecondary, fontSize = 11.sp)
                                         }
-                                        Text("₹${"%.2f".format(tx.amount)}", color = JapYellowPrimary, fontWeight = FontWeight.Bold)
+                                        Text("₹${"%.2f".format(tx.amount)}", color = BrandPurple, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -494,3 +566,4 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
         }
     }
 }
+
