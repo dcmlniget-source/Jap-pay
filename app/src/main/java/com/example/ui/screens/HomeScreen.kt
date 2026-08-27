@@ -40,6 +40,7 @@ import com.example.ui.theme.*
 import com.example.ui.viewmodel.JapPayViewModel
 import com.example.ui.viewmodel.Screen
 import com.example.util.QrCodeUtils
+import com.example.util.UrlUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -59,6 +60,15 @@ fun HomeScreen(viewModel: JapPayViewModel) {
     var isTorchOn by remember { mutableStateOf(false) }
     var showQrModal by remember { mutableStateOf(false) }
     var showBalanceModal by remember { mutableStateOf(false) }
+    var isFullScreenScannerOpen by remember { mutableStateOf(false) }
+
+    if (isFullScreenScannerOpen) {
+        FullScreenScannerView(
+            viewModel = viewModel,
+            onClose = { isFullScreenScannerOpen = false }
+        )
+        return
+    }
 
     val qrGalleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -240,13 +250,21 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                             color = TextPrimary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.Default.Verified, contentDescription = null, tint = BrandPurple, modifier = Modifier.size(16.dp))
+                        if (currentUser?.isCustomIdActive == true && !currentUser?.customId.isNullOrEmpty()) {
+                            Text("👑", fontSize = 14.sp)
+                        } else {
+                            Icon(Icons.Default.Verified, contentDescription = null, tint = BrandPurple, modifier = Modifier.size(16.dp))
+                        }
                     }
                     Text(
-                        text = currentUser?.id ?: "@jap",
+                        text = if (currentUser?.isCustomIdActive == true && !currentUser?.customId.isNullOrEmpty()) {
+                            "${currentUser?.customId} • VIP"
+                        } else {
+                            currentUser?.id ?: "@jap"
+                        },
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
-                        fontWeight = FontWeight.Medium
+                        color = if (currentUser?.isCustomIdActive == true) BrandPurple else TextSecondary,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -417,127 +435,106 @@ fun HomeScreen(viewModel: JapPayViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
         }
 
-        // 4. Live Camera / Scan & Pay Card
+        // VIP Custom Jap ID Banner (₹19 / Year)
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp)
-                    .shadow(3.dp, RoundedCornerShape(20.dp), spotColor = Color(0x15000000)),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = LightSurface),
-                border = CardDefaults.outlinedCardBorder().copy(
-                    brush = Brush.linearGradient(listOf(LightCardBorder, BrandPurple.copy(alpha = 0.4f)))
-                )
+                    .clickable { viewModel.currentScreen.value = Screen.BuyCustomId }
+                    .shadow(3.dp, RoundedCornerShape(18.dp), spotColor = Color(0x25FFB300)),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (showCameraView) {
-                        JapCameraPreview(
-                            modifier = Modifier.fillMaxSize(),
-                            isFlashOn = isTorchOn
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF2C134A), Color(0xFF4C1D78), Color(0xFF6B26A8))
+                            )
                         )
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.radialGradient(
-                                        listOf(BrandPurpleTint.copy(alpha = 0.4f), LightSurface),
-                                        radius = 400f
-                                    )
-                                ),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(90.dp)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(BrandPurpleTint)
-                                    .border(1.5.dp, BrandPurple, RoundedCornerShape(20.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.QrCodeScanner,
-                                    contentDescription = null,
-                                    tint = BrandPurple,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "Scan & Pay Any QR Code",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Real-time scanner with Jap Pay logo verification",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
-                            )
-                        }
-                    }
-
-                    // Floating Controls Overlay
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
+                ) {
                     Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
-                            onClick = { qrGalleryLauncher.launch("image/*") },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.9f))
-                                .shadow(2.dp, CircleShape)
+                        Surface(
+                            shape = CircleShape,
+                            color = AccentGold.copy(alpha = 0.2f),
+                            modifier = Modifier.size(42.dp)
                         ) {
-                            Icon(Icons.Default.Image, contentDescription = "Gallery", tint = BrandPurple, modifier = Modifier.size(20.dp))
+                            Box(contentAlignment = Alignment.Center) {
+                                Text("👑", fontSize = 22.sp)
+                            }
                         }
-
-                        Button(
-                            onClick = { showCameraView = !showCameraView },
-                            shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (showCameraView) BrandPurple else BrandPurpleDark,
-                                contentColor = Color.White
-                            ),
-                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
-                        ) {
-                            Icon(
-                                if (showCameraView) Icons.Default.Videocam else Icons.Default.CameraAlt,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (showCameraView) "Camera Active" else "Open Camera", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        }
-
-                        IconButton(
-                            onClick = { isTorchOn = !isTorchOn },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.9f))
-                                .shadow(2.dp, CircleShape)
-                        ) {
-                            Icon(
-                                if (isTorchOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
-                                contentDescription = "Flash",
-                                tint = if (isTorchOn) BrandPurple else TextSecondary,
-                                modifier = Modifier.size(20.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Claim Custom Jap ID", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = AccentGold
+                                ) {
+                                    Text(
+                                        "₹19/yr",
+                                        color = Color(0xFF2C134A),
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "Get your personalized handle like @king or @alex",
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 11.sp
                             )
                         }
+                        Icon(
+                            Icons.Default.ArrowForward,
+                            contentDescription = "Upgrade",
+                            tint = AccentGold,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 4. Compact 1:1 Aspect Ratio QR Scanner Card (Double-tap to open Full Screen)
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "QR Scanner (1:1 Mode)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    text = "Full Screen ⛶",
+                    color = BrandPurple,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { isFullScreenScannerOpen = true }
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            CompactQrScannerCard(
+                viewModel = viewModel,
+                onExpandToFullScreen = { isFullScreenScannerOpen = true }
+            )
 
             Spacer(modifier = Modifier.height(18.dp))
         }

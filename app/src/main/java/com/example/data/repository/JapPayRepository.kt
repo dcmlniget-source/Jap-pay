@@ -28,9 +28,68 @@ class JapPayRepository(private val db: JapPayDatabase) {
 
     suspend fun getUserById(userId: String) = userDao.getUserById(userId)
     suspend fun getUserByPhone(phone: String) = userDao.getUserByPhone(phone)
+    suspend fun getUserByCustomId(customId: String) = userDao.getUserByCustomId(customId)
+    suspend fun findUser(target: String): User? = userDao.findUserByIdOrPhoneOrCustomId(target)
     suspend fun searchUsers(query: String) = userDao.searchUsers(query)
     suspend fun insertUser(user: User) = userDao.insertUser(user)
     suspend fun updateUser(user: User) = userDao.updateUser(user)
+
+    suspend fun isCustomIdAvailable(customId: String, currentUserId: String): Boolean {
+        val clean = if (customId.endsWith("@jap")) customId.lowercase().trim() else "${customId.lowercase().trim()}@jap"
+        val existing = userDao.getUserByCustomId(clean) ?: userDao.getUserById(clean)
+        return existing == null || existing.id == currentUserId
+    }
+
+    suspend fun activateCustomId(
+        userId: String,
+        customId: String,
+        price: Double = 19.0,
+        paidViaWallet: Boolean = true
+    ): Result<Transaction> {
+        val user = userDao.getUserById(userId) ?: return Result.failure(Exception("User not found"))
+        val fullCustomId = if (customId.endsWith("@jap")) customId.lowercase().trim() else "${customId.lowercase().trim()}@jap"
+
+        val isAvail = isCustomIdAvailable(fullCustomId, userId)
+        if (!isAvail) {
+            return Result.failure(Exception("Jap ID '$fullCustomId' is already claimed by another user."))
+        }
+
+        if (paidViaWallet) {
+            if (user.walletBalance < price) {
+                return Result.failure(Exception("Insufficient wallet balance. Required ₹${"%.2f".format(price)}"))
+            }
+            userDao.deductWalletBalance(userId, price)
+        }
+
+        val expiresAt = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000)
+        userDao.updateCustomId(userId, fullCustomId, expiresAt)
+
+        val tx = Transaction(
+            senderId = userId,
+            senderName = user.name,
+            receiverId = "JAPPAY_VIP_REGISTRY",
+            receiverName = "Jap Pay VIP Custom ID Registry",
+            amount = price,
+            message = "Purchased 1-Year VIP Custom Jap ID: $fullCustomId",
+            status = "SUCCESS",
+            type = "CUSTOM_ID_PURCHASE",
+            soundTriggered = "WOW",
+            timestamp = System.currentTimeMillis()
+        )
+        val txId = transactionDao.insertTransaction(tx)
+
+        notificationDao.insertNotification(
+            AppNotification(
+                userId = userId,
+                title = "VIP Jap ID Activated! 👑",
+                message = "Congratulations! Your exclusive VIP Jap ID '$fullCustomId' is now active for 1 year.",
+                type = "CREDIT",
+                amount = price
+            )
+        )
+
+        return Result.success(tx.copy(id = txId))
+    }
 
     suspend fun performTransfer(
         sender: User,
@@ -42,9 +101,12 @@ class JapPayRepository(private val db: JapPayDatabase) {
             return Result.failure(Exception("Insufficient wallet balance. You have ₹${"%.2f".format(sender.walletBalance)}"))
         }
 
-        val receiver = userDao.getUserById(receiverId) 
-            ?: userDao.getUserByPhone(receiverId.replace("@jap", ""))
-            ?: return Result.failure(Exception("User $receiverId not found in Jap Pay"))
+        val cleanReceiverId = receiverId.trim()
+        val receiver = userDao.findUserByIdOrPhoneOrCustomId(cleanReceiverId)
+            ?: userDao.getUserById(cleanReceiverId)
+            ?: userDao.getUserByPhone(cleanReceiverId.replace("@jap", ""))
+            ?: userDao.getUserByCustomId(cleanReceiverId)
+            ?: return Result.failure(Exception("User '$receiverId' not found in Jap Pay"))
 
         // Deduct from sender, add to receiver
         userDao.deductWalletBalance(sender.id, amount)
@@ -55,7 +117,7 @@ class JapPayRepository(private val db: JapPayDatabase) {
         val tx = Transaction(
             senderId = sender.id,
             senderName = sender.name,
-            receiverId = receiver.id,
+            receiverId = receiver.customId?.takeIf { receiver.isCustomIdActive } ?: receiver.id,
             receiverName = receiver.name,
             amount = amount,
             message = message,
@@ -71,7 +133,7 @@ class JapPayRepository(private val db: JapPayDatabase) {
             AppNotification(
                 userId = sender.id,
                 title = "Payment Sent 💸",
-                message = "₹${"%.2f".format(amount)} transferred to ${receiver.name} (${receiver.id})",
+                message = "₹${"%.2f".format(amount)} transferred to ${receiver.name} (${receiver.customId?.takeIf { receiver.isCustomIdActive } ?: receiver.id})",
                 type = "DEBIT",
                 amount = amount
             )
@@ -119,6 +181,41 @@ class JapPayRepository(private val db: JapPayDatabase) {
                 soundTriggered = "WOW"
             )
         )
+    }
+
+    suspend fun depositViaFamPay(
+        userId: String,
+        amount: Double,
+        orderId: String
+    ): Transaction {
+        val user = userDao.getUserById(userId)
+        userDao.addWalletBalance(userId, amount)
+
+        val tx = Transaction(
+            senderId = "FAMPAY_GATEWAY",
+            senderName = "FamPay Instant Gateway",
+            receiverId = userId,
+            receiverName = user?.name ?: "Wallet",
+            amount = amount,
+            message = "Added to Jap Pay Wallet via FamPay (Order ID: $orderId)",
+            status = "SUCCESS",
+            type = "DEPOSIT",
+            soundTriggered = "WOW",
+            timestamp = System.currentTimeMillis()
+        )
+        val txId = transactionDao.insertTransaction(tx)
+
+        notificationDao.insertNotification(
+            AppNotification(
+                userId = userId,
+                title = "Money Added via FamPay! ⚡",
+                message = "₹${"%.2f".format(amount)} successfully credited to your Jap Pay wallet via FamPay (Order: $orderId).",
+                type = "CREDIT",
+                amount = amount
+            )
+        )
+
+        return tx.copy(id = txId)
     }
 
     suspend fun submitDepositRequest(request: DepositRequest): Long {

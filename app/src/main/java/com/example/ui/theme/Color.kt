@@ -37,4 +37,6 @@ val AccentRedBg = Color(0xFFFEE2E2)
 val AccentPurple = Color(0xFF7C4DFF)
 val AccentBlue = Color(0xFF2563EB)
 val AccentOrange = Color(0xFFF97316)
+val AccentGold = Color(0xFFFFB300)
+val FamPayOrangeColor = Color(0xFFFF7A00)
 

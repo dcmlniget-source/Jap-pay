@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.data.remote.FamPayService
 import com.example.ui.components.JapAvatar
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.JapPayViewModel
@@ -319,10 +320,13 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                     }
 
                     AdminTab.QR_SETTINGS -> {
+                        var gatewayMode by remember { mutableStateOf(adminConfig?.gatewayMode ?: "API_GATEWAY") }
+                        var famPayApiKey by remember { mutableStateOf(adminConfig?.famPayApiKey ?: FamPayService.DEFAULT_AUTH_TOKEN) }
+                        var customIdPriceText by remember { mutableStateOf((adminConfig?.customIdPrice ?: 19.0).toString()) }
                         var upiId by remember { mutableStateOf(adminConfig?.adminUpiId ?: "8791738300@jap") }
                         var qrImageUrl by remember { mutableStateOf(adminConfig?.adminQrImageUrl ?: "") }
                         var paymentLink by remember { mutableStateOf(adminConfig?.paymentLink ?: "") }
-                        var instructions by remember { mutableStateOf(adminConfig?.depositInstructions ?: "") }
+                        var instructions by remember { mutableStateOf(adminConfig?.depositInstructions ?: "Scan the QR or pay via active gateway. Balance credited instantly on verification!") }
                         var notice by remember { mutableStateOf(adminConfig?.noticeMessage ?: "") }
 
                         Column(
@@ -330,8 +334,68 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
                         ) {
-                            Text("Configure Payment QR & UPI Gateway", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Text("Payment Gateway Configuration", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text("Select Active Payment Mode:", color = TextSecondary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Gateway Mode Selector Cards
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                GatewayModeCard(
+                                    title = "⚡ FamPay Automated API Gateway (Live)",
+                                    description = "Automated UPI orders & auto-verification via FamAPI (FAM_LIVE). Instant wallet credits.",
+                                    isSelected = gatewayMode == "API_GATEWAY",
+                                    onClick = { gatewayMode = "API_GATEWAY" }
+                                )
+                                GatewayModeCard(
+                                    title = "📝 Manual UPI & UTR Gateway",
+                                    description = "Users scan Admin QR/UPI and submit 12-digit UTR + screenshot for manual admin approval.",
+                                    isSelected = gatewayMode == "MANUAL_GATEWAY",
+                                    onClick = { gatewayMode = "MANUAL_GATEWAY" }
+                                )
+                                GatewayModeCard(
+                                    title = "🔗 External Payment Link Gateway",
+                                    description = "Users are directed to an external browser payment gateway link.",
+                                    isSelected = gatewayMode == "LINK_GATEWAY",
+                                    onClick = { gatewayMode = "LINK_GATEWAY" }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            if (gatewayMode == "API_GATEWAY") {
+                                OutlinedTextField(
+                                    value = famPayApiKey,
+                                    onValueChange = { famPayApiKey = it },
+                                    label = { Text("FamPay API Bearer Key") },
+                                    placeholder = { Text("FAM_LIVE_sk_...") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = BrandPurple,
+                                        unfocusedBorderColor = LightCardBorder,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            OutlinedTextField(
+                                value = customIdPriceText,
+                                onValueChange = { customIdPriceText = it },
+                                label = { Text("VIP Custom ID Yearly Price (₹)") },
+                                placeholder = { Text("19.0") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = BrandPurple,
+                                    unfocusedBorderColor = LightCardBorder,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             OutlinedTextField(
                                 value = upiId,
@@ -385,8 +449,8 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                             OutlinedTextField(
                                 value = paymentLink,
                                 onValueChange = { paymentLink = it },
-                                label = { Text("Payment Link (Optional)") },
-                                placeholder = { Text("https://pay.example.com/instant") },
+                                label = { Text("External Payment Link") },
+                                placeholder = { Text("https://py.freepanel.in/pay/...") },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = BrandPurple,
@@ -403,7 +467,7 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                                 onValueChange = { instructions = it },
                                 label = { Text("Deposit Instructions for Users") },
                                 modifier = Modifier.fillMaxWidth(),
-                                minLines = 3,
+                                minLines = 2,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = BrandPurple,
                                     unfocusedBorderColor = LightCardBorder,
@@ -431,13 +495,23 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
 
                             Button(
                                 onClick = {
-                                    viewModel.adminUpdateConfig(upiId, qrImageUrl, paymentLink, instructions, notice)
+                                    val price = customIdPriceText.toDoubleOrNull() ?: 19.0
+                                    viewModel.adminUpdateGatewayConfig(
+                                        gatewayMode = gatewayMode,
+                                        famPayApiKey = famPayApiKey,
+                                        adminUpiId = upiId,
+                                        adminQrImageUrl = qrImageUrl,
+                                        paymentLink = paymentLink,
+                                        customIdPrice = price,
+                                        depositInstructions = instructions,
+                                        notice = notice
+                                    )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(containerColor = BrandPurple, contentColor = Color.White),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Save Settings", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text("Save All Settings", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                             }
                             Spacer(modifier = Modifier.height(30.dp))
                         }
@@ -562,6 +636,49 @@ fun AdminPanelScreen(viewModel: JapPayViewModel) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun GatewayModeCard(
+    title: String,
+    description: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) BrandPurpleTint else LightSurface
+        ),
+        border = CardDefaults.outlinedCardBorder().copy(
+            brush = Brush.horizontalGradient(
+                listOf(
+                    if (isSelected) BrandPurple else LightCardBorder,
+                    if (isSelected) BrandPurple else LightCardBorder
+                )
+            )
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = isSelected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(selectedColor = BrandPurple)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(title, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(description, color = TextSecondary, fontSize = 11.sp, lineHeight = 15.sp)
             }
         }
     }

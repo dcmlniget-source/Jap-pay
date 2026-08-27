@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
         AdminConfig::class,
         AppNotification::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class JapPayDatabase : RoomDatabase() {
@@ -81,7 +81,7 @@ abstract class JapPayDatabase : RoomDatabase() {
                 )
             )
 
-            // 2. Preloaded Community Users
+            // 2. Preloaded Community Users (Starting with 0 balance)
             val users = listOf(
                 User(
                     id = "8791738300@jap",
@@ -92,9 +92,9 @@ abstract class JapPayDatabase : RoomDatabase() {
                     address = "Sector 62, Noida, Uttar Pradesh, India",
                     aadhaarVerified = true,
                     aadhaarNumberMasked = "XXXX-XXXX-8300",
-                    walletBalance = 1500.0,
-                    keeperBalance = 350.0,
-                    totalRewardsEarned = 18.50,
+                    walletBalance = 0.0,
+                    keeperBalance = 0.0,
+                    totalRewardsEarned = 0.0,
                     isAdmin = false,
                     avatarColorIndex = 0
                 ),
@@ -107,7 +107,7 @@ abstract class JapPayDatabase : RoomDatabase() {
                     address = "Connaught Place, New Delhi",
                     aadhaarVerified = true,
                     aadhaarNumberMasked = "XXXX-XXXX-5670",
-                    walletBalance = 850.0,
+                    walletBalance = 0.0,
                     avatarColorIndex = 1
                 ),
                 User(
@@ -119,7 +119,7 @@ abstract class JapPayDatabase : RoomDatabase() {
                     address = "Bandra West, Mumbai, Maharashtra",
                     aadhaarVerified = true,
                     aadhaarNumberMasked = "XXXX-XXXX-3201",
-                    walletBalance = 1200.0,
+                    walletBalance = 0.0,
                     avatarColorIndex = 2
                 ),
                 User(
@@ -131,7 +131,7 @@ abstract class JapPayDatabase : RoomDatabase() {
                     address = "Indiranagar, Bengaluru, Karnataka",
                     aadhaarVerified = true,
                     aadhaarNumberMasked = "XXXX-XXXX-3344",
-                    walletBalance = 920.0,
+                    walletBalance = 0.0,
                     avatarColorIndex = 3
                 ),
                 User(
@@ -143,7 +143,7 @@ abstract class JapPayDatabase : RoomDatabase() {
                     address = "Gomti Nagar, Lucknow, Uttar Pradesh",
                     aadhaarVerified = true,
                     aadhaarNumberMasked = "XXXX-XXXX-6655",
-                    walletBalance = 640.0,
+                    walletBalance = 0.0,
                     avatarColorIndex = 4
                 ),
                 User(
@@ -155,7 +155,7 @@ abstract class JapPayDatabase : RoomDatabase() {
                     address = "Park Street, Kolkata, West Bengal",
                     aadhaarVerified = true,
                     aadhaarNumberMasked = "XXXX-XXXX-6780",
-                    walletBalance = 430.0,
+                    walletBalance = 0.0,
                     avatarColorIndex = 5
                 )
             )
@@ -164,66 +164,14 @@ abstract class JapPayDatabase : RoomDatabase() {
                 userDao.insertUser(user)
             }
 
-            // 3. Initial Sample Transactions
-            val initialTransactions = listOf(
-                Transaction(
-                    senderId = "varun@jap",
-                    senderName = "Varun Rathore",
-                    receiverId = "8791738300@jap",
-                    receiverName = "Devansh",
-                    amount = 120.0,
-                    message = "Dinner split 🍕",
-                    status = "SUCCESS",
-                    type = "TRANSFER",
-                    soundTriggered = "WOW",
-                    timestamp = System.currentTimeMillis() - 3600000 * 2
-                ),
-                Transaction(
-                    senderId = "8791738300@jap",
-                    senderName = "Devansh",
-                    receiverId = "anshika@jap",
-                    receiverName = "Anshika Sharma",
-                    amount = 60.0,
-                    message = "Coffee on me ☕",
-                    status = "SUCCESS",
-                    type = "TRANSFER",
-                    soundTriggered = "CRYING",
-                    timestamp = System.currentTimeMillis() - 3600000 * 5
-                ),
-                Transaction(
-                    senderId = "ADMIN",
-                    senderName = "Jap Pay Cashback",
-                    receiverId = "8791738300@jap",
-                    receiverName = "Devansh",
-                    amount = 20.0,
-                    message = "Welcome Reward Bonus 🎉",
-                    status = "SUCCESS",
-                    type = "REWARD",
-                    soundTriggered = "WOW",
-                    timestamp = System.currentTimeMillis() - 3600000 * 24
-                )
-            )
-
-            for (tx in initialTransactions) {
-                transactionDao.insertTransaction(tx)
-            }
-
-            // 4. Initial Notifications
+            // 3. Initial Notifications (No bonus notifications)
             val initialNotifications = listOf(
-                AppNotification(
-                    userId = "8791738300@jap",
-                    title = "Money Received! 🎉",
-                    message = "Varun Rathore sent you ₹120.00 with note: 'Dinner split 🍕'",
-                    type = "CREDIT",
-                    amount = 120.0,
-                    timestamp = System.currentTimeMillis() - 3600000 * 2
-                ),
                 AppNotification(
                     userId = "ALL",
                     title = "Welcome to Jap Pay ⚡",
-                    message = "Send money to any @jap ID or scan QR code instantly with 0% fees.",
+                    message = "Add money via FamPay or send money to any @jap ID instantly with 0% fees.",
                     type = "ADMIN_BROADCAST",
-                    timestamp = System.currentTimeMillis() - 3600000 * 12
+                    timestamp = System.currentTimeMillis()
                 )
             )
 

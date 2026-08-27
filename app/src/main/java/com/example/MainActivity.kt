@@ -122,9 +122,11 @@ fun JapPayApp(viewModel: JapPayViewModel) {
                     Screen.Admin -> AdminPanelScreen(viewModel)
                     Screen.SendMoney -> SendMoneyScreen(viewModel)
                     Screen.AddMoney -> AddMoneyScreen(viewModel)
+                    Screen.BuyCustomId -> BuyCustomIdScreen(viewModel)
+                    Screen.PaymentReceipt -> PaymentReceiptScreen(viewModel)
                     Screen.Notifications -> NotificationsScreen(viewModel)
                     Screen.TransactionHistory -> TransactionHistoryScreen(viewModel)
-                    Screen.Scanner -> HomeScreen(viewModel)
+                    Screen.Scanner -> FullScreenScannerView(viewModel, onClose = { viewModel.currentScreen.value = Screen.Main })
                     Screen.Main -> {
                         when (currentTab) {
                             MainTab.HOME -> HomeScreen(viewModel)

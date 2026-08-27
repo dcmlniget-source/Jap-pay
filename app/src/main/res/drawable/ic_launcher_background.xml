@@ -14,9 +14,16 @@
                 android:endX="108"
                 android:endY="108"
                 android:type="linear">
-                <item android:color="#FFD600" android:offset="0.0" />
-                <item android:color="#FFAB00" android:offset="1.0" />
+                <item android:color="#5F259F" android:offset="0.0" />
+                <item android:color="#3700B3" android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>
+    <!-- Modern Jap Pay Geometric Accent Circles -->
+    <path
+        android:fillColor="#15FFFFFF"
+        android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0" />
+    <path
+        android:fillColor="#25FFFFFF"
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
 </vector>

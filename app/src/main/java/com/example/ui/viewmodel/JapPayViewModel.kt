@@ -12,6 +12,7 @@ import com.example.data.model.CountryData
 import com.example.data.model.DepositRequest
 import com.example.data.model.Transaction
 import com.example.data.model.User
+import com.example.data.remote.FamPayService
 import com.example.data.remote.GeminiAadhaarService
 import com.example.data.remote.Sms8Service
 import com.example.data.repository.JapPayRepository
@@ -35,9 +36,11 @@ sealed class Screen {
     object Admin : Screen()
     object SendMoney : Screen()
     object AddMoney : Screen()
+    object BuyCustomId : Screen()
     object Notifications : Screen()
     object TransactionHistory : Screen()
     object Scanner : Screen()
+    object PaymentReceipt : Screen()
 }
 
 enum class MainTab {
@@ -92,13 +95,21 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
     val allTransactions: StateFlow<List<Transaction>> = repository.getAllTransactions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Transfer State
+    // Transfer State & Last Receipt
     val transferTargetId = MutableStateFlow("")
     val transferTargetName = MutableStateFlow("")
     val transferAmount = MutableStateFlow("")
     val transferMessage = MutableStateFlow("")
     val transferStatus = MutableStateFlow<String?>(null)
     val isTransferring = MutableStateFlow(false)
+    val lastCompletedTransaction = MutableStateFlow<Transaction?>(null)
+
+    // Scanner Mode (Compact 1:1 vs Fullscreen)
+    val isFullScreenScanner = MutableStateFlow(false)
+
+    // FamPay Add Money Gateway State
+    val isCreatingFamPayOrder = MutableStateFlow(false)
+    val activeFamPayOrder = MutableStateFlow<FamPayService.FamPayOrderResult?>(null)
 
     // UI Toggles
     val isBalanceVisible = MutableStateFlow(false)
@@ -243,6 +254,7 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
                 return@launch
             }
 
+            // Wallet balance strictly starts at 0.0 (no signup bonus)
             val newUser = User(
                 id = japId,
                 name = name.trim(),
@@ -253,16 +265,13 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
                 aadhaarVerified = aadhaarAiResult.value?.isAuthentic ?: true,
                 aadhaarNumberMasked = aadhaarAiResult.value?.maskedNumber ?: "XXXX-XXXX-${cleanPhone.takeLast(4)}",
                 aadhaarVerificationNotes = aadhaarAiResult.value?.details ?: "Aadhaar Verified",
-                walletBalance = 100.0,
+                walletBalance = 0.0,
+                keeperBalance = 0.0,
+                totalRewardsEarned = 0.0,
                 avatarColorIndex = (0..5).random()
             )
 
             repository.insertUser(newUser)
-            repository.broadcastNotification(
-                title = "Welcome Bonus Added! 🎁",
-                message = "₹100.00 welcome bonus has been credited to your Jap Pay wallet!",
-                targetUserId = newUser.id
-            )
 
             currentUserId.value = newUser.id
             currentScreen.value = Screen.Main
@@ -286,7 +295,7 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
         targetId: String,
         amount: Double,
         message: String,
-        onComplete: (Boolean, String) -> Unit
+        onComplete: (Boolean, String, Transaction?) -> Unit
     ) {
         val user = currentUser.value ?: return
         isTransferring.value = true
@@ -301,6 +310,7 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
             isTransferring.value = false
 
             result.onSuccess { tx ->
+                lastCompletedTransaction.value = tx
                 // Play crying meme sound on money transfer
                 SoundPlayer.playCryingSound(getApplication<Application>())
 
@@ -311,9 +321,128 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
                     message = "₹${"%.2f".format(amount)} sent to ${tx.receiverName}"
                 )
 
-                onComplete(true, "₹${"%.2f".format(amount)} sent to ${tx.receiverName} successfully!")
+                onComplete(true, "₹${"%.2f".format(amount)} sent to ${tx.receiverName} successfully!", tx)
             }.onFailure { err ->
-                onComplete(false, err.message ?: "Transfer failed")
+                onComplete(false, err.message ?: "Transfer failed", null)
+            }
+        }
+    }
+
+    // --- FamPay & Multi-Gateway Actions ---
+
+    fun createFamPayOrder(
+        amountInRupees: Double,
+        onResult: (FamPayService.FamPayOrderResult) -> Unit
+    ) {
+        val apiKey = adminConfig.value?.famPayApiKey ?: FamPayService.DEFAULT_AUTH_TOKEN
+        isCreatingFamPayOrder.value = true
+        viewModelScope.launch {
+            val orderResult = FamPayService.createOrder(
+                amountInRupees = amountInRupees,
+                apiKey = apiKey,
+                receipt = "JAP_${System.currentTimeMillis()}"
+            )
+            isCreatingFamPayOrder.value = false
+            activeFamPayOrder.value = orderResult
+            onResult(orderResult)
+        }
+    }
+
+    fun verifyFamPayOrder(
+        orderId: String,
+        amountInRupees: Double,
+        onResult: (FamPayService.FamPayVerifyResult) -> Unit
+    ) {
+        val apiKey = adminConfig.value?.famPayApiKey ?: FamPayService.DEFAULT_AUTH_TOKEN
+        viewModelScope.launch {
+            val verifyResult = FamPayService.verifyPayment(
+                orderId = orderId,
+                apiKey = apiKey
+            )
+
+            if (verifyResult.isSuccess) {
+                val user = currentUser.value
+                if (user != null) {
+                    val finalAmount = if (verifyResult.amount > 0) verifyResult.amount else amountInRupees
+                    val tx = repository.depositViaFamPay(user.id, finalAmount, orderId)
+                    lastCompletedTransaction.value = tx
+                    SoundPlayer.playWowSound(getApplication<Application>())
+                    showToast("Payment Verified! ₹${"%.2f".format(finalAmount)} credited to your wallet ⚡")
+                }
+            }
+            onResult(verifyResult)
+        }
+    }
+
+    fun completeFamPayDeposit(
+        orderId: String,
+        amount: Double,
+        onComplete: (Transaction) -> Unit
+    ) {
+        val user = currentUser.value ?: return
+        viewModelScope.launch {
+            val tx = repository.depositViaFamPay(user.id, amount, orderId)
+            lastCompletedTransaction.value = tx
+            SoundPlayer.playCoinChime(getApplication<Application>())
+            showToast("₹${"%.2f".format(amount)} successfully added to Jap Pay wallet via FamPay! ⚡")
+            onComplete(tx)
+        }
+    }
+
+    // --- Custom ID / VIP Jap ID Actions ---
+
+    fun checkCustomIdAvailability(
+        customId: String,
+        onResult: (Boolean, String) -> Unit
+    ) {
+        val user = currentUser.value ?: return
+        val clean = customId.trim().lowercase()
+        if (clean.length < 3) {
+            onResult(false, "Custom ID must be at least 3 characters")
+            return
+        }
+        val full = if (clean.endsWith("@jap")) clean else "$clean@jap"
+
+        viewModelScope.launch {
+            val isAvail = repository.isCustomIdAvailable(full, user.id)
+            if (isAvail) {
+                onResult(true, "Available! You can claim $full")
+            } else {
+                onResult(false, "Oops! $full is already registered by someone else")
+            }
+        }
+    }
+
+    fun purchaseCustomId(
+        customId: String,
+        paidViaWallet: Boolean = true,
+        onComplete: (Boolean, String, Transaction?) -> Unit
+    ) {
+        val user = currentUser.value ?: run {
+            onComplete(false, "User session not found", null)
+            return
+        }
+        val price = adminConfig.value?.customIdPrice ?: 19.0
+
+        if (paidViaWallet && user.walletBalance < price) {
+            onComplete(false, "Insufficient wallet balance (₹${"%.2f".format(user.walletBalance)}). Please add money or pay via gateway.", null)
+            return
+        }
+
+        viewModelScope.launch {
+            val result = repository.activateCustomId(
+                userId = user.id,
+                customId = customId,
+                price = price,
+                paidViaWallet = paidViaWallet
+            )
+            result.onSuccess { tx ->
+                lastCompletedTransaction.value = tx
+                SoundPlayer.playWowSound(getApplication<Application>())
+                showToast("VIP Custom ID '$customId' is now live! 👑")
+                onComplete(true, "VIP Custom ID activated successfully for 1 Year!", tx)
+            }.onFailure { err ->
+                onComplete(false, err.message ?: "Failed to activate custom ID", null)
             }
         }
     }
@@ -412,6 +541,34 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun adminUpdateGatewayConfig(
+        gatewayMode: String,
+        famPayApiKey: String,
+        adminUpiId: String,
+        adminQrImageUrl: String,
+        paymentLink: String,
+        customIdPrice: Double,
+        depositInstructions: String,
+        notice: String
+    ) {
+        val current = adminConfig.value ?: AdminConfig()
+        viewModelScope.launch {
+            repository.saveAdminConfig(
+                current.copy(
+                    gatewayMode = gatewayMode,
+                    famPayApiKey = famPayApiKey,
+                    adminUpiId = adminUpiId,
+                    adminQrImageUrl = adminQrImageUrl,
+                    paymentLink = paymentLink,
+                    customIdPrice = customIdPrice,
+                    depositInstructions = depositInstructions,
+                    noticeMessage = notice
+                )
+            )
+            showToast("Admin Gateway & System settings updated! ⚡")
+        }
+    }
+
     fun adminUpdateConfig(
         adminUpiId: String,
         adminQrImageUrl: String,
@@ -434,4 +591,5 @@ class JapPayViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 }
+
 

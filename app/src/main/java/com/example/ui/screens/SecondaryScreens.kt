@@ -28,6 +28,9 @@ import com.example.ui.components.QrCodeDisplay
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.JapPayViewModel
 import com.example.ui.viewmodel.Screen
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun WalletScreen(viewModel: JapPayViewModel) {
@@ -157,11 +160,63 @@ fun WalletScreen(viewModel: JapPayViewModel) {
                     ) {
                         Column {
                             Text(currentUser?.name?.uppercase() ?: "USER", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text(currentUser?.id ?: "user@jap", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                            Text(
+                                text = if (currentUser?.isCustomIdActive == true && !currentUser?.customId.isNullOrEmpty()) {
+                                    "${currentUser?.customId} 👑"
+                                } else {
+                                    currentUser?.id ?: "user@jap"
+                                },
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Text("RuPay", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
                     }
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // VIP Custom ID Shortcut Banner in Wallet
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { viewModel.currentScreen.value = Screen.BuyCustomId }
+                .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Color(0x15000000)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = LightSurface),
+            border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(LightCardBorder, LightCardBorder)))
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = AccentGold.copy(alpha = 0.15f),
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("👑", fontSize = 18.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (currentUser?.isCustomIdActive == true) "VIP Handle: ${currentUser?.customId}" else "Get Custom Jap ID (₹19/yr)",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                    Text(
+                        text = if (currentUser?.isCustomIdActive == true) "Active until ${SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(currentUser?.customIdExpiresAt ?: 0L))}" else "Register your unique name handle",
+                        color = TextSecondary,
+                        fontSize = 11.sp
+                    )
+                }
+                Icon(Icons.Default.ArrowForward, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
             }
         }
 

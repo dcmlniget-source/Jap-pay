@@ -41,6 +41,15 @@ interface UserDao {
     @Update
     suspend fun updateUser(user: User)
 
+    @Query("SELECT * FROM users WHERE customId = :customId LIMIT 1")
+    suspend fun getUserByCustomId(customId: String): User?
+
+    @Query("SELECT * FROM users WHERE id = :targetId OR phone = :targetId OR customId = :targetId LIMIT 1")
+    suspend fun findUserByIdOrPhoneOrCustomId(targetId: String): User?
+
+    @Query("UPDATE users SET customId = :customId, isCustomIdActive = 1, customIdExpiresAt = :expiresAt WHERE id = :userId")
+    suspend fun updateCustomId(userId: String, customId: String, expiresAt: Long)
+
     @Query("UPDATE users SET walletBalance = walletBalance + :amount WHERE id = :userId")
     suspend fun addWalletBalance(userId: String, amount: Double)
 

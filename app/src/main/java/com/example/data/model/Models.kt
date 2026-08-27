@@ -21,6 +21,9 @@ data class User(
     val isBiometricEnabled: Boolean = true,
     val isAdmin: Boolean = false,
     val avatarColorIndex: Int = 0,
+    val customId: String? = null, // e.g. "alex@jap"
+    val isCustomIdActive: Boolean = false,
+    val customIdExpiresAt: Long = 0L,
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -34,7 +37,7 @@ data class Transaction(
     val amount: Double,
     val message: String = "",
     val status: String = "SUCCESS", // "SUCCESS", "FAILED", "PENDING"
-    val type: String = "TRANSFER", // "TRANSFER", "DEPOSIT", "REWARD", "KEEPER_SAVE", "KEEPER_WITHDRAW"
+    val type: String = "TRANSFER", // "TRANSFER", "DEPOSIT", "REWARD", "KEEPER_SAVE", "KEEPER_WITHDRAW", "CUSTOM_ID_PURCHASE"
     val soundTriggered: String = "NONE", // "CRYING", "WOW", "NONE"
     val timestamp: Long = System.currentTimeMillis()
 )
@@ -62,7 +65,10 @@ data class AdminConfig(
     val adminQrData: String = "upi://pay?pa=8791738300@jap&pn=JapPayAdmin&cu=INR",
     val adminQrImageUrl: String = "",
     val paymentLink: String = "",
-    val depositInstructions: String = "Scan the QR or pay to UPI ID / Payment link. Enter 12-digit UTR and upload receipt screenshot. Approved in minutes!",
+    val gatewayMode: String = "API_GATEWAY", // "API_GATEWAY", "MANUAL_GATEWAY", "LINK_GATEWAY"
+    val famPayApiKey: String = "FAM_LIVE_sk_vZJ4iRe9T2Ouw1mAXzwT7OLVgsCj08xX",
+    val customIdPrice: Double = 19.0,
+    val depositInstructions: String = "Scan the QR or pay via active gateway. Balance credited instantly on verification!",
     val noticeMessage: String = "Welcome to Jap Pay! Instant peer-to-peer virtual transactions."
 )
 
