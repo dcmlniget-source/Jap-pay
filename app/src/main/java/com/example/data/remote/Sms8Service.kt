@@ -64,7 +64,7 @@ object Sms8Service {
                     val json = JSONObject(responseBody)
                     val status = json.optBoolean("status", true)
                     val msg = json.optString("message", "OTP sent successfully to $formattedPhone via SMS")
-                    val debugCode = json.optString("code", null)
+                    val debugCode = if (json.has("code") && !json.isNull("code")) json.getString("code") else null
                     if (debugCode != null) {
                         localOtpStore[formattedPhone] = debugCode
                     }
