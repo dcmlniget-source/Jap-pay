@@ -1,0 +1,6 @@
+{
+  "name": "Jap Pay",
+  "description": "Jap Pay - Seamless peer-to-peer virtual UPI payment app with QR scanner, AI Aadhaar verification, sms8 OTP, funny sounds, admin portal & savings jar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
